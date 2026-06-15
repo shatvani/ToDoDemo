@@ -1,0 +1,122 @@
+{
+  // JSON Schema URL — nem futásidős beállítás.
+  // Kizárólag a Visual Studio IntelliSense-nek szól:
+  // automatikus kiegészítést és validációt biztosít szerkesztés közben.
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+
+  "settings": {
+
+    // =========================================================================
+    // documentationRules — XML dokumentációs szabályok
+    //
+    // FIGYELEM: Ezek a szabályok az .editorconfig-ban mind "none"-ra vannak
+    // állítva (SA1600, SA1601, SA1602), tehát jelenleg NEM aktívak.
+    // Ha bármelyik dokumentációs szabályt visszakapcsolják, ezek a beállítások
+    // lépnek életbe.
+    // =========================================================================
+    "documentationRules": {
+
+      // A cég neve — a {companyName} placeholder értéke a copyrightText-ben.
+      "companyName": "FPH",
+
+      // Az SA1633 szabályhoz tartozó elvárt copyright header szövege.
+      // Ha az SA1633 be lenne kapcsolva, minden fájl tetején ezt kellene látni:
+      //   // Copyright (c) FPH. All rights reserved.
+      // Jelenleg az .editorconfig-ban SA1633.severity = none, tehát nem aktív.
+      "copyrightText": "Copyright (c) {companyName}. All rights reserved.",
+
+      // Az interfészeket (pl. IUserRepository) kötelező XML kommenttel dokumentálni.
+      // Csak akkor aktív, ha SA1600 nincs none-ra állítva.
+      "documentInterfaces": true,
+
+      // A public és protected tagokat kötelező XML kommenttel dokumentálni.
+      "documentExposedElements": true,
+
+      // Az internal láthatóságú tagokat NEM kötelező dokumentálni.
+      "documentInternalElements": false,
+
+      // A private tagokat NEM kötelező dokumentálni.
+      "documentPrivateElements": false,
+
+      // A privát mezőket (_userRepository stb.) külön is NEM kötelező dokumentálni.
+      // Ez a documentPrivateElements-nél specifikusabb beállítás.
+      "documentPrivateFields": false
+    },
+
+    // =========================================================================
+    // orderingRules — using direktívák sorrendezési szabályai
+    // =========================================================================
+    "orderingRules": {
+
+      // A using direktívák a névtér KÍVÜLRE kerüljenek, ne belülre.
+      //
+      // ✅ Helyes (outsideNamespace):
+      //   using System;
+      //   namespace FPH.MyApp { ... }
+      //
+      // ❌ Nem így (insideNamespace):
+      //   namespace FPH.MyApp { using System; ... }
+      //
+      // Összhangban van az .editorconfig SA1200.severity = none beállításával:
+      // az SA1200 épp azt kényszerítené ki, hogy a using-ok belülre kerüljenek,
+      // de az le van tiltva, hogy ez a "outsideNamespace" beállítás érvényesülhessen.
+      "usingDirectivesPlacement": "outsideNamespace",
+
+      // A System.* névterek a többi using ELŐTT szerepeljenek.
+      // Összhangban van az .editorconfig dotnet_sort_system_directives_first = true
+      // beállításával — mindkét helyen ugyanaz a szabály van definiálva.
+      "systemUsingDirectivesFirst": true
+    },
+
+    // =========================================================================
+    // namingRules — Elnevezési szabályok
+    // =========================================================================
+    "namingRules": {
+
+      // A "magyar jelölés" (Hungarian Notation) tiltva van.
+      // Ilyen prefixek nem engedélyezettek: strName, intCount, bIsValid stb.
+      // A StyleCop alapból ismer néhány "közismert" magyar prefixet
+      // (b, str, i stb.) — ezeket sem engedi.
+      // Megjegyzés: az _ prefix (amit a naming rule előír) NEM számít
+      // magyar jelölésnek, az külön kategória.
+      "allowCommonHungarianPrefixes": false,
+
+      // Az egyedileg engedélyezett magyar prefixek listája üres —
+      // tehát semmilyen kivétel nincs engedélyezve.
+      "allowedHungarianPrefixes": []
+    },
+
+    // =========================================================================
+    // layoutRules — Elrendezési szabályok
+    // =========================================================================
+    "layoutRules": {
+
+      // Minden fájl végén kötelező az üres sor (SA2000 szabály).
+      // Lehetséges értékek:
+      //   "require" — kötelező az üres sor a fájl végén
+      //   "allow"   — mindegy, van-e vagy nincs
+      //   "omit"    — nem lehet üres sor a fájl végén
+      //
+      // Összhangban van az .editorconfig insert_final_newline = true beállításával.
+      "newlineAtEndOfFile": "require"
+    },
+
+    // =========================================================================
+    // maintainabilityRules — Karbantarthatósági szabályok
+    // =========================================================================
+    "maintainabilityRules": {
+
+      // Megadja, hogy egy fájlban csak egyetlen ilyen típusú deklaráció
+      // szerepelhet (SA1402 szabály). Minden típus külön fájlba kerül.
+      //
+      // ❌ Nem helyes — két class egy fájlban:
+      //   public class UserService { }
+      //   public class OrderService { }
+      //
+      // ✅ Helyes — minden class külön fájlba kerül:
+      //   UserService.cs  → public class UserService { }
+      //   OrderService.cs → public class OrderService { }
+      "topLevelTypes": ["class", "interface", "struct", "enum", "delegate"]
+    }
+  }
+}

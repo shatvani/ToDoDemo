@@ -1,0 +1,236 @@
+.editorconfig szabály
+        │
+        ├── Formázás (indent, newline, space...)
+        │       └── 🖥️  Csak Visual Studio / dotnet format
+        │
+        ├── dotnet_naming_rule / csharp_style_* / dotnet_style_*
+        │       └── ⚙️  Roslyn (beépített) — dotnet build futtatja
+        │                   severity = error  → ❌ build meghiúsul
+        │                   severity = warning → ⚠️  figyelmeztet
+        │                   severity = suggestion → 💡 csak IDE
+        │
+        └── dotnet_diagnostic.SA* / SX* / CS*
+                └── 🔍  Analyzer csomag kell hozzá (StyleCop NuGet)
+                            + severity szabja meg a hatást
+
+# =============================================================================
+# .editorconfig — Egységes kódformázási szabályok az egész projekthez
+# Dokumentáció: https://editorconfig.org
+# =============================================================================
+
+# Ez a legfelső szintű .editorconfig fájl.
+# A szerkesztő ne keressen tovább a könyvtárstruktúrában feljebb.
+root = true
+
+# =============================================================================
+# [*] — Minden fájltípusra vonatkozó általános szabályok
+# =============================================================================
+[*]
+
+# Minden fájl kódolása UTF-8 legyen (fontos az ékezetes karakterekhez).
+charset = utf-8
+
+# Sorvégi karakter: CRLF (\r\n) — Windows-konvenció.
+# Egységesíti a sorvégeket akkor is, ha valaki Linux/macOS-t használ.
+end_of_line = crlf
+
+# Behúzáshoz szóközt használ (a [Makefile] szekció kivételével — ott kötelező a tab).
+indent_style = space
+
+# Sor végi felesleges szóközök levágása mentéskor. Csökkenti a zajos git diff-eket.
+trim_trailing_whitespace = true
+
+# Minden fájl végére egy üres sort szúr be.
+# Unix-konvenció, megakadályozza, hogy a git diff panaszkodjon a hiányzó newline-ra.
+insert_final_newline = true
+
+# =============================================================================
+# [*.{cs,csx}] — C# és C# Script fájlok szabályai
+# =============================================================================
+[*.{cs,csx}]
+
+# Behúzás mérete 4 szóköz — a standard C# konvenció.
+indent_size = 4
+
+# --- C# kódolási konvenciók ---------------------------------------------------
+
+# A "using System.*" névterek kerüljenek a többi using elé. Az IDE rendezi automatikusan.
+dotnet_sort_system_directives_first = true
+
+# Ne legyen üres sor a különböző using csoportok között. Kompaktabb using-blokk.
+dotnet_separate_import_directive_groups = false
+
+# --- Elnevezési konvenciók (Naming Rules) -------------------------------------
+#
+# Az elnevezési szabályok három részből állnak:
+#   - rule:    összekapcsolja a szimbólumcsoportot és a stílust, és megadja a súlyosságot
+#   - symbols: meghatározza, mely szimbólumokra vonatkozik a szabály
+#   - style:   meghatározza az elvárt elnevezési formátumot
+
+# Interfészek: kötelező az "I" prefix + PascalCase (pl. IUserRepository).
+# Súlyosság: error — ha nem így van, fordítási hiba keletkezik.
+dotnet_naming_rule.interfaces_should_be_prefixed_with_i.severity = error
+dotnet_naming_rule.interfaces_should_be_prefixed_with_i.symbols = interface
+dotnet_naming_rule.interfaces_should_be_prefixed_with_i.style = prefix_with_i
+
+dotnet_naming_symbols.interface.applicable_kinds = interface
+
+dotnet_naming_style.prefix_with_i.required_prefix = I
+dotnet_naming_style.prefix_with_i.capitalization = pascal_case
+
+# Típusok (class, struct, enum, delegate): kötelező a PascalCase.
+# Súlyosság: error — ha nem így van, fordítási hiba keletkezik.
+dotnet_naming_rule.types_should_be_pascal_case.severity = error
+dotnet_naming_rule.types_should_be_pascal_case.symbols = types
+dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+
+dotnet_naming_symbols.types.applicable_kinds = class,struct,enum,delegate
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Privát mezők: kötelező az "_" prefix + camelCase (pl. _userRepository).
+# Súlyosság: warning — nem blokkolja a buildet, de jelzi a problémát.
+# Megjegyzés: SA1309 le van tiltva, mert ez a szabály azzal ütközne.
+dotnet_naming_rule.private_fields_camel_underscore.severity = warning
+dotnet_naming_rule.private_fields_camel_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_camel_underscore.style = camel_underscore
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.camel_underscore.required_prefix = _
+dotnet_naming_style.camel_underscore.capitalization = camel_case
+
+# --- var használat ------------------------------------------------------------
+
+# Beépített típusoknál (int, string, stb.) is var-t javasol: var count = 0;
+csharp_style_var_for_built_in_types = true:suggestion
+
+# Ha a jobb oldalon egyértelmű a típus (pl. new List<string>()), var-t javasol.
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+# Minden más esetben is var-t javasol. Ez egy erősen var-párti konfiguráció.
+csharp_style_var_elsewhere = true:suggestion
+
+# --- Expression-bodied tagok --------------------------------------------------
+
+# Ha a metódus egy sorba fér, javasolja a => szintaxist: public int GetId() => _id;
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+
+# Property-knél is javasolja az expression-body formát: public string Name => _name;
+csharp_style_expression_bodied_properties = true:suggestion
+
+# --- Null-kezelés -------------------------------------------------------------
+
+# ?. (null-conditional) használatát javasolja: user?.Name a null-check helyett.
+dotnet_style_null_propagation = true:suggestion
+
+# ?? (null-coalescing) használatát javasolja: value ?? defaultValue.
+dotnet_style_coalesce_expression = true:suggestion
+
+# throw expression használatát javasolja konstruktorban:
+# _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+csharp_style_throw_expression = true:suggestion
+
+# Delegate hívás előtt ?.Invoke() használatát javasolja: OnChanged?.Invoke(this, args);
+csharp_style_conditional_delegate_call = true:suggestion
+
+# --- Kapcsos zárójelek --------------------------------------------------------
+
+# Mindig kötelező a kapcsos zárójel, még egysoros if/for esetén is.
+# Súlyosság: error — megakadályozza a "goto fail" típusú hibákat.
+csharp_prefer_braces = true:error
+
+# --- Új sorok elhelyezése (Allman-stílus) -------------------------------------
+
+# A nyitó { mindig új sorba kerüljön minden kontextusban (metódus, osztály, lambda, stb.).
+csharp_new_line_before_open_brace = all
+
+# Az else új sorba kerüljön a záró } után, ne maradjon ugyanabban a sorban.
+csharp_new_line_before_else = true
+
+# A catch új sorba kerüljön.
+csharp_new_line_before_catch = true
+
+# A finally új sorba kerüljön.
+csharp_new_line_before_finally = true
+
+# --- Szóközök -----------------------------------------------------------------
+
+# Cast után nincs szóköz: (int)value, nem (int) value.
+csharp_space_after_cast = false
+
+# Öröklési klauznában a : előtt és után szóköz van: class Foo : Bar.
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_after_colon_in_inheritance_clause = true
+
+# Bináris operátorok körül szóköz van: a + b, nem a+b.
+csharp_space_around_binary_operators = before_and_after
+
+# --- Behúzás ------------------------------------------------------------------
+
+# A switch blokkon belüli case tartalma be van húzva.
+csharp_indent_case_contents = true
+
+# Maguk a case cimkék is be vannak húzva a switch-hez képest.
+csharp_indent_switch_labels = true
+
+# --- Diagnosztikai elnyomások (Roslyn) ----------------------------------------
+
+# CS1591: Hiányzó XML komment publikus tagnál — ki van kapcsolva, opt-in per projekt.
+dotnet_diagnostic.CS1591.severity = none
+
+# --- StyleCop elnyomások ------------------------------------------------------
+
+# SA1633: Fájl tetején copyright header — nem kötelező ebben a projektben.
+dotnet_diagnostic.SA1633.severity = none
+
+# SA1200: using direktívák elhelyezése — ki van kapcsolva, mert top-level statement-eknél
+# (pl. Program.cs) a using-ok nem kerülhetnek névtér belsejébe.
+dotnet_diagnostic.SA1200.severity = none
+
+# SA1101: Osztálytag-hívás előtt kötelező "this." prefix — túl zavaró, ki van kapcsolva.
+dotnet_diagnostic.SA1101.severity = none
+
+# SA1309: Mezők neve nem kezdődhet "_"-sal — ÜTKÖZIK a camel_underscore naming rule-lal,
+# ezért le van tiltva. Helyette SX1309 van bekapcsolva (lásd lentebb).
+dotnet_diagnostic.SA1309.severity = none
+
+# SX1309: Mezők nevének "_"-sal KELL kezdődnie (SA1309 ellentétes alternatívája,
+# StyleCop.Analyzers.Unstable csomag). Warning szinten van, összhangban a naming rule-lal.
+dotnet_diagnostic.SX1309.severity = warning
+
+# SA1600: Publikus elemek dokumentálása kötelező — ki van kapcsolva, opt-in.
+dotnet_diagnostic.SA1600.severity = none
+
+# SA1601: Partial elemek dokumentálása kötelező — ki van kapcsolva, opt-in.
+dotnet_diagnostic.SA1601.severity = none
+
+# SA1602: Enum értékek dokumentálása kötelező — ki van kapcsolva, opt-in.
+dotnet_diagnostic.SA1602.severity = none
+
+# =============================================================================
+# [*.{json,yml,yaml}] — JSON és YAML fájlok
+# =============================================================================
+[*.{json,yml,yaml}]
+
+# JSON és YAML fájlokban 2 szóköz a behúzás — általánosan elfogadott konvenció.
+indent_size = 2
+
+# =============================================================================
+# [*.md] — Markdown fájlok
+# =============================================================================
+[*.md]
+
+# Markdown-ban a sor végi szóközök szándékosak lehetnek (két szóköz = <br> törés),
+# ezért itt NEM vágjuk le őket — felülírja az [*] szekció általános szabályát.
+trim_trailing_whitespace = false
+
+# =============================================================================
+# [Makefile] — Makefile (GNU Make)
+# =============================================================================
+[Makefile]
+
+# Makefile-ban a tab karakter KÖTELEZŐ — szintaktikai követelmény.
+# A make tool nem fogadja el a szóközöket. Felülírja az [*] indent_style = space szabályát.
+indent_style = tab

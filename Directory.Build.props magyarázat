@@ -1,0 +1,119 @@
+<Project>
+  <!--
+    Directory.Build.props
+    =====================
+    MSBuild által automatikusan felolvasott konfigurációs fájl.
+    Nem kell hivatkozni rá egyetlen .csproj-ban sem — az MSBuild
+    automatikusan megtalálja a könyvtárstruktúrában, és MINDEN projektre
+    érvényes, amely ebben a mappában vagy alkönyvtárában található.
+
+    Tipikusan a solution gyökerébe kerül, és a csapatszintű,
+    egységes build-beállításokat tartalmazza.
+  -->
+  <PropertyGroup>
+
+    <!--
+      TreatWarningsAsErrors
+      Minden figyelmeztetést fordítási hibává emel.
+      Ha a fordító vagy bármely Roslyn Analyzer warning-ot dob, a build MEGHIÚSUL.
+
+      Fontos következmény az .editorconfig-gal kombinálva:
+        - Az .editorconfig-ban "severity = warning" szabályok (pl. private_fields_camel_underscore)
+          szintén build hibává válnak — tehát az _ prefix hiánya is blokkol.
+        - A Nullable figyelmeztetések szintén build hibává válnak (lásd lentebb).
+    -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      Nullable
+      Bekapcsolja a Nullable Reference Types funkciót (C# 8.0+).
+      A fordító nyomon követi, hogy egy referencia típus lehet-e null vagy sem.
+
+      Példa:
+        string name = null;   ❌ Warning: cannot assign null to non-nullable
+        string? name = null;  ✅ Helyes — explicit nullable jelölés
+
+      TreatWarningsAsErrors = true miatt a nullable figyelmeztetések
+      szintén build hibává válnak — minden nem kezelt null-lehetőséget
+      explicit módon kell kezelni vagy jelölni.
+    -->
+    <Nullable>enable</Nullable>
+
+    <!--
+      ImplicitUsings
+      Automatikusan beilleszti a leggyakoribb using direktívákat,
+      anélkül hogy azokat minden fájlban ki kellene írni.
+
+      .NET 6+ projektekben tipikusan ezek kerülnek be automatikusan:
+        using System;
+        using System.Collections.Generic;
+        using System.Linq;
+        using System.Threading.Tasks;
+        (+ projekt típustól függően további névterek,
+         pl. ASP.NET Core-nál Microsoft.AspNetCore.*)
+    -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!--
+      LangVersion
+      Meghatározza, hogy melyik C# nyelvi verziót használja a fordító.
+      "latest" = mindig a legújabb STABIL C# verzió (jelenleg C# 13).
+
+      Lehetséges értékek: 12, 13, latest, latestMajor, preview
+      Figyelem: "preview" a még nem végleges nyelvi funkciókat is bekapcsolja —
+      az éles projektekben a "latest" biztonságosabb választás.
+
+      LangVersion vs AnalysisLevel:
+        - LangVersion: milyen C# SZINTAXIST lehet írni
+        - AnalysisLevel: milyen ROSLYN SZABÁLYOK futnak a kódon (lásd lentebb)
+    -->
+    <LangVersion>latest</LangVersion>
+
+    <!--
+      AnalysisLevel
+      Meghatározza, hogy a Roslyn beépített kódanalizátorok melyik
+      szabálykészletét alkalmazza.
+      "latest" = a .NET SDK aktuális verziójának teljes szabálykészlete.
+
+      Lehetséges értékek: none, minimum, recommended, all, latest,
+                          vagy konkrét verzió (pl. 8, 9)
+
+      LangVersion vs AnalysisLevel:
+        - LangVersion: milyen C# SZINTAXIST lehet írni
+        - AnalysisLevel: milyen ROSLYN SZABÁLYOK futnak a kódon
+    -->
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!--
+      EnforceCodeStyleInBuild
+      Az .editorconfig-ban definiált kódstílus-szabályok a BUILD SORÁN IS
+      érvényesülnek — nem csak az IDE-ben.
+
+      Enélkül az .editorconfig stílus-szabályai (pl. csharp_prefer_braces,
+      csharp_new_line_before_open_brace, naming rules stb.) csak Visual
+      Studióban jelennének meg; a "dotnet build" figyelmen kívül hagyná őket.
+
+      Ez az a beállítás, amely "összeköti" az .editorconfig-ot a CI/CD
+      pipeline-nal — nélküle a kódstílus nem kényszeríthető ki automatikusan.
+    -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!--
+      GenerateDocumentationFile
+      Fordításkor generál egy XML dokumentációs fájlt (pl. MyProject.xml)
+      a publikus tagok XML kommentjeiből (/// <summary>...</summary>).
+
+      Ez szükséges ahhoz, hogy:
+        1. NuGet csomagoknál IntelliSense leírás jelenjen meg más projektekben
+        2. Swagger/OpenAPI (Swashbuckle) automatikusan felolvassa
+           az API végpontok dokumentációját
+        3. A CS1591 figyelmeztetés aktív legyen (hiányzó XML komment)
+
+      Megjegyzés: a CS1591 az .editorconfig-ban "none"-ra van állítva,
+      tehát a hiányzó XML kommentek NEM blokkolják a buildet — a dokumentáció
+      generálása engedélyezett, de nem kötelező.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+  </PropertyGroup>
+</Project>

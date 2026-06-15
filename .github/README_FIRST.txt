@@ -1,0 +1,1 @@
+A fájl 6. sorában {personal-github} placeholder van — cseréld le a tényleges GitHub felhasználónevedre, ha megvan a repo URL.

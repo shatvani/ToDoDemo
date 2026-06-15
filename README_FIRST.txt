@@ -1,0 +1,1 @@
+Két helyen maradt {personal-github} placeholder a README.md fájlban — a badge URL-ekben és a clone parancsban — ezeket a repo létrehozása után cseréld le.
