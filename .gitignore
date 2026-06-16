@@ -130,5 +130,9 @@ desktop.ini
 # GitHub Actions local runner
 _work/
 
+<<<<<<< Updated upstream
 # Workflow description files
 workflow-*"docker/README.txt" 
+=======
+workflow*
+>>>>>>> Stashed changes
