@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using TodoApi.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // OpenAPI / Scalar
@@ -9,8 +12,8 @@ builder.Services.AddRazorPages();
 // Health Checks (DB check added in EPIC-2 after DbContext is wired up)
 builder.Services.AddHealthChecks();
 
-// TODO EPIC-2: EF Core + PostgreSQL
-/* builder.Services.AddDbContext<TodoDbContext>(...); */
+builder.Services.AddDbContext<TodoDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // TODO EPIC-2: FluentValidation
 /* builder.Services.AddFluentValidationAutoValidation(); */
