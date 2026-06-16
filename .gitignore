@@ -129,3 +129,6 @@ desktop.ini
 
 # GitHub Actions local runner
 _work/
+
+# Workflow description files
+workflow-*"docker/README.txt" 
