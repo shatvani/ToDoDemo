@@ -33,6 +33,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="WolverineFx" Version="6.11.0" />
+    <PackageReference Include="WolverineFx.FluentValidation" Version="6.11.0" />
+    <PackageReference Include="WolverineFx.Http" Version="6.11.0" />
+    <PackageReference Include="WolverineFx.Http.FluentValidation" Version="6.11.0" />
   </ItemGroup>
 
 </Project>

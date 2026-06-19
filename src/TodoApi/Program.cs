@@ -1,10 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
+using Wolverine;
+using Wolverine.Http;
+using Wolverine.Http.FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // OpenAPI / Scalar
 builder.Services.AddOpenApi();
+
+builder.Services.AddWolverineHttp();
+builder.Host.UseWolverine(opts =>
+{
+    opts.Discovery
+        .IncludeAssembly(typeof(Program).Assembly);
+});
 
 // Razor Pages (HTMX views — EPIC-3)
 builder.Services.AddRazorPages();
@@ -35,5 +45,10 @@ app.MapHealthChecks("/api/health");
 
 // TODO EPIC-2: Feature slice endpoints
 /* app.MapTodoEndpoints(); */
+
+app.MapWolverineEndpoints(opts =>
+{
+    opts.UseFluentValidationProblemDetailMiddleware();
+});
 
 app.Run();
