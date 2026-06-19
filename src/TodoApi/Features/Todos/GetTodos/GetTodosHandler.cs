@@ -18,7 +18,24 @@ namespace TodoApi.Features.Todos.GetTodos
         public async Task<IEnumerable<TodoItemDto>> Handle(
             GetTodosQuery query, TodoDbContext db)
         {
-            return _db.Todos.Select(x => new TodoItemDto(
+            var queryable = db.Todos.AsQueryable();
+
+            if (query.Status is not null)
+            {
+                queryable = queryable.Where(x => x.Status.ToString() == query.Status);
+            }
+
+            if (query.Priority is not null)
+            {
+                queryable = queryable.Where(x => x.Priority.ToString() == query.Priority);
+            }
+
+            if (query.Tag is not null)
+            {
+                queryable = queryable.Where(x => x.Tags != null && x.Tags.Contains(query.Tag));
+            }
+
+            return queryable.Select(x => new TodoItemDto(
                 x.Id.Value,
                 x.Title,
                 x.Description,
