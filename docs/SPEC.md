@@ -100,6 +100,7 @@ GET    /api/health             → health check (CI/CD-hez)
 | ORM | Entity Framework Core 10 |
 | Adatbázis | PostgreSQL 16 |
 | Architektúra | Vertical Slice Architecture (VSA) |
+| Messaging / CQRS | Wolverine |
 | Validáció | FluentValidation |
 | Tesztelés | xUnit + Testcontainers (PostgreSQL) — Copilot generálja a vázat IDE-ben, fejlesztő írja az edge case-eket |
 | Logging | Microsoft.Extensions.Logging + Application Insights sink |

@@ -87,6 +87,7 @@ Az architektúra döntések dokumentálva vannak a `docs/adr/` mappában.
 | [ADR-001](docs/adr/ADR-001-htmx-vs-react.md) | HTMX 2.0 a React helyett | ✅ Elfogadva |
 | [ADR-002](docs/adr/ADR-002-sonarcloud-vs-sonarqube.md) | SonarCloud az önhosztolt SonarQube helyett | ✅ Elfogadva |
 | [ADR-003](docs/adr/ADR-003-copilot-vs-claude-pipeline.md) | GitHub Copilot / Models API a pipeline-ban, Claude nem | ✅ Elfogadva |
+| [ADR-004](docs/adr/ADR-004-wolverine-vs-mediatr.md) | Wolverine a MediatR helyett (CQRS mediator) | ✅ Elfogadva |
 
 Új architektúra döntésnél: hozz létre új ADR-t a fenti sablonnal, és add hozzá az indexhez.
 
