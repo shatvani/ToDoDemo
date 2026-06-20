@@ -1,21 +1,22 @@
 services:
 
   db:
-    image: postgres:16-alpine
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: todo-db
     environment:
-      POSTGRES_DB: tododb
-      POSTGRES_USER: todo
-      POSTGRES_PASSWORD: todo_dev_pw
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Todo_dev_pw1!"
+      MSSQL_DB: tododb
     ports:
-      - "5432:5432"
+      - "1433:1433"
     volumes:
-      - todo-db-data:/var/lib/postgresql/data
+      - todo-db-data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U todo -d tododb"]
-      interval: 5s
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Todo_dev_pw1!' -Q 'SELECT 1' -No -C"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   api:
     build:
@@ -24,7 +25,7 @@ services:
     container_name: todo-api
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=db;Database=tododb;Username=todo;Password=todo_dev_pw"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=tododb;User Id=sa;Password=Todo_dev_pw1!;TrustServerCertificate=True"
     ports:
       - "5000:8080"
     depends_on:
