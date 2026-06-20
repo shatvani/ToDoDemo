@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
 using Wolverine;
+using Wolverine.EntityFrameworkCore;
 using Wolverine.Http;
 using Wolverine.Http.FluentValidation;
 
@@ -12,8 +13,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddWolverineHttp();
 builder.Host.UseWolverine(opts =>
 {
-    opts.Discovery
-        .IncludeAssembly(typeof(Program).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
+    opts.UseEntityFrameworkCoreTransactions();
 });
 
 // Razor Pages (HTMX views — EPIC-3)
@@ -22,8 +23,11 @@ builder.Services.AddRazorPages();
 // Health Checks (DB check added in EPIC-2 after DbContext is wired up)
 builder.Services.AddHealthChecks();
 
-builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// A factory-s minta jobb választás a Wolverine handlerekhez: a kézzel kontrollált await using élettartam elkerüli a scope-ütközéseket, ha egy handler párhuzamosan vagy hosszabb műveletben fut.
+builder.Services.AddDbContextFactory<TodoDbContext>(opts =>
+    opts.UseSqlServer(connectionString));
 
 // TODO EPIC-2: FluentValidation
 /* builder.Services.AddFluentValidationAutoValidation(); */

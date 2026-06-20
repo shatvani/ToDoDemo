@@ -19,16 +19,6 @@ public class TodoDbContext(DbContextOptions<TodoDbContext> options) : DbContext(
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasConversion(userIdConverter);
-            entity.Property(e => e.Tags)
-                .HasColumnType("nvarchar(max)")
-                .HasConversion(
-                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                    v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions?)null))
-                .Metadata.SetValueComparer(
-                    new ValueComparer<string[]>(
-                        (c1, c2) => c1!.SequenceEqual(c2!),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToArray()));
             entity.Property(e => e.Status).HasConversion<int>();
             entity.Property(e => e.Priority).HasConversion<int>();
         });

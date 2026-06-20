@@ -91,3 +91,8 @@ trim_trailing_whitespace = false
 
 [Makefile]
 indent_style = tab
+
+# Az EF Core által generált migrációs fájlokat generált kódként kezeljük,
+# így a StyleCop és a többi analyzer nem fut rájuk.
+[**/Migrations/*.cs]
+generated_code = true
