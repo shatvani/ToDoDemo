@@ -23,7 +23,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddHealthChecks();
 
 builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // TODO EPIC-2: FluentValidation
 /* builder.Services.AddFluentValidationAutoValidation(); */
