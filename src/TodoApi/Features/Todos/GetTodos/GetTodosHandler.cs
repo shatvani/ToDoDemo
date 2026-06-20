@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using TodoApi.Data;
 using TodoApi.DTOs;
@@ -5,19 +7,13 @@ using Wolverine.Http;
 
 namespace TodoApi.Features.Todos.GetTodos
 {
-    public class GetTodosHandler
+    public class GetTodosHandler(IDbContextFactory<TodoDbContext> dbFactory)
     {
-        private readonly TodoDbContext _db;
-
-        public GetTodosHandler(TodoDbContext db)
-        {
-            _db = db;
-        }
-
         [WolverineGet("/api/todos")]
         public async Task<IEnumerable<TodoItemDto>> Handle(
-            GetTodosQuery query, TodoDbContext db)
+           [FromQuery] GetTodosQuery query)
         {
+            await using var db = await dbFactory.CreateDbContextAsync();
             var queryable = db.Todos.AsQueryable();
 
             if (query.Status is not null)
@@ -35,7 +31,8 @@ namespace TodoApi.Features.Todos.GetTodos
                 queryable = queryable.Where(x => x.Tags != null && x.Tags.Contains(query.Tag));
             }
 
-            return queryable.Select(x => new TodoItemDto(
+            return await queryable
+            .Select(x => new TodoItemDto(
                 x.Id.Value,
                 x.Title,
                 x.Description,
@@ -43,7 +40,8 @@ namespace TodoApi.Features.Todos.GetTodos
                 x.Priority.ToString(),
                 x.CreatedAt,
                 x.DueDate,
-                x.Tags)).ToList();
+                x.Tags))
+            .ToListAsync();
         }
     }
 }

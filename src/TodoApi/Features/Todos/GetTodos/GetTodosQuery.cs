@@ -1,7 +1,7 @@
 namespace TodoApi.Features.Todos.GetTodos
 {
     public record GetTodosQuery(
-        string? Status,
-        string? Priority,
-        string? Tag);
+        string? Status = null,
+        string? Priority = null,
+        string? Tag = null);
 }
