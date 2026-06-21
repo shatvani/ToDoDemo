@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.MsSql;
 using TodoApi.Data;
+using TodoApi.Infrastructure.SaveChangesInterceptor;
 using Xunit;
 
 namespace TodoApi.Tests.Infrastructure
@@ -39,8 +40,12 @@ namespace TodoApi.Tests.Infrastructure
                 services.RemoveAll<DbContextOptions<TodoDbContext>>();
                 services.RemoveAll<TodoDbContext>();
 
-                services.AddDbContextFactory<TodoDbContext>(opts =>
-                    opts.UseSqlServer(_db.GetConnectionString()));
+                services.AddSingleton<UpdatedAtInterceptor>();
+                services.AddDbContextFactory<TodoDbContext>((sp, opts) =>
+                {
+                    opts.UseSqlServer(_db.GetConnectionString());
+                    opts.AddInterceptors(sp.GetRequiredService<UpdatedAtInterceptor>());
+                });
             });
         }
 
