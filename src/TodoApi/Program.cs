@@ -23,10 +23,11 @@ builder.Host.UseWolverine(opts =>
 // Razor Pages (HTMX views — EPIC-3)
 builder.Services.AddRazorPages();
 
-// Health Checks (DB check added in EPIC-2 after DbContext is wired up)
-builder.Services.AddHealthChecks();
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Health Checks (DB check added in EPIC-2 after DbContext is wired up)
+builder.Services.AddHealthChecks()
+    .AddSqlServer(connectionString!);
 
 builder.Services.AddSingleton<UpdatedAtInterceptor>();
 
