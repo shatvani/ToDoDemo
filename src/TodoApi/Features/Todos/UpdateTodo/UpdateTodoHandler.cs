@@ -22,7 +22,6 @@ namespace TodoApi.Features.Todos.UpdateTodo
             todo.Title = command.Title;
             todo.Description = command.Description;
             todo.Priority = command.Priority;
-            todo.DueDate = command.DueDate?.UtcDateTime;
             todo.Tags = command.Tags;
             todo.UpdatedAt = DateTime.UtcNow;
 

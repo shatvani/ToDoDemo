@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
+using TodoApi.Infrastructure.SaveChangesInterceptor;
 using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.Http;
@@ -27,9 +28,14 @@ builder.Services.AddHealthChecks();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+builder.Services.AddSingleton<UpdatedAtInterceptor>();
+
 // A factory-s minta jobb választás a Wolverine handlerekhez: a kézzel kontrollált await using élettartam elkerüli a scope-ütközéseket, ha egy handler párhuzamosan vagy hosszabb műveletben fut.
-builder.Services.AddDbContextFactory<TodoDbContext>(opts =>
-    opts.UseSqlServer(connectionString));
+builder.Services.AddDbContextFactory<TodoDbContext>((sp, opts) =>
+{
+    opts.UseSqlServer(connectionString);
+    opts.AddInterceptors(sp.GetRequiredService<UpdatedAtInterceptor>());
+});
 
 builder.Services.ConfigureHttpJsonOptions(opts =>
     opts.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
