@@ -14,7 +14,7 @@ namespace TodoApi.Features.Todos.GetTodoById
         {
             await using var db = await dbFactory.CreateDbContextAsync();
 
-            var todo = await db.Todos.FindAsync(id);
+            var todo = await db.Todos.FindAsync(new UserId(id));
 
             if (todo == null)
             {
