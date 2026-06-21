@@ -18,7 +18,8 @@ namespace TodoApi.Features.Todos.UpdateTodo
                 .IsInEnum().WithMessage("Érvénytelen prioritás.");
 
             RuleFor(x => x.DueDate)
-                .GreaterThan(DateTimeOffset.UtcNow).WithMessage("A határidő a jövőben kell legyen.");
+                .GreaterThan(DateTimeOffset.UtcNow).WithMessage("A határidő a jövőben kell legyen.")
+                .When(x => x.DueDate.HasValue);
         }
     }
 }

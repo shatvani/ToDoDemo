@@ -9,10 +9,10 @@ namespace TodoApi.Features.Todos.UpdateTodo
     public class UpdateTodoHandler(IDbContextFactory<TodoDbContext> dbFactory)
     {
         [WolverinePut("/api/todos/{id}")]
-        public async Task<Results<Ok<TodoItemDto>, NotFound>> Handle(UpdateTodoCommand command)
+        public async Task<Results<Ok<TodoItemDto>, NotFound>> Handle(Guid id, UpdateTodoCommand command)
         {
             await using var db = await dbFactory.CreateDbContextAsync();
-            var todo = await db.Todos.FindAsync(new UserId(command.Id));
+            var todo = await db.Todos.FindAsync(new UserId(id));
 
             if (todo == null)
             {
