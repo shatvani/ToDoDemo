@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
@@ -29,6 +30,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // A factory-s minta jobb választás a Wolverine handlerekhez: a kézzel kontrollált await using élettartam elkerüli a scope-ütközéseket, ha egy handler párhuzamosan vagy hosszabb műveletben fut.
 builder.Services.AddDbContextFactory<TodoDbContext>(opts =>
     opts.UseSqlServer(connectionString));
+
+builder.Services.ConfigureHttpJsonOptions(opts =>
+    opts.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // TODO EPIC-2: FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
