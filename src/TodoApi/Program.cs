@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
 using Wolverine;
@@ -30,7 +31,7 @@ builder.Services.AddDbContextFactory<TodoDbContext>(opts =>
     opts.UseSqlServer(connectionString));
 
 // TODO EPIC-2: FluentValidation
-/* builder.Services.AddFluentValidationAutoValidation(); */
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // TODO EPIC-2: Application Insights
 /* builder.Services.AddApplicationInsightsTelemetry(); */
