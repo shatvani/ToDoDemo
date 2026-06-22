@@ -24,6 +24,7 @@ namespace TodoApi.Features.Todos.UpdateTodo
             todo.Priority = command.Priority;
             todo.Tags = command.Tags;
             todo.UpdatedAt = DateTime.UtcNow;
+            todo.DueDate = command.DueDate.HasValue ? command.DueDate.Value.UtcDateTime : null;
 
             await db.SaveChangesAsync();
 
