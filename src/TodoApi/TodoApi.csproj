@@ -42,4 +42,13 @@
     <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.13.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\css\" />
+    <Folder Include="wwwroot\js\" />
+  </ItemGroup>
+
+  <Target Name="BuildTailwind" BeforeTargets="Build">
+    <Exec Command="$(MSBuildThisFileDirectory)..\..\tools\tailwindcss.exe -i Styles/input.css -o wwwroot/css/site.css --minify" />
+  </Target>
+
 </Project>
