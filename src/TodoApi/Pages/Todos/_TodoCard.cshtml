@@ -79,7 +79,14 @@
                 class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 transition">
             ✏️ Szerkesztés
         </button>
-
+        <button hx-delete="/todos/delete/@Model.Id"
+            hx-target="#card-@Model.Id"
+            hx-swap="outerHTML"
+            hx-confirm="Biztosan törölni szeretnéd ezt a feladatot?"
+            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100 transition">
+            🗑️ Törlés
+        </button>
+        <div>
         @if (Model.Status == "Open")
         {
             <button hx-post="/todos/status/@Model.Id"
@@ -121,6 +128,7 @@
                 ✕ Visszavonás
             </button>
         }
+        </div>
     </div>
 
 </div>
