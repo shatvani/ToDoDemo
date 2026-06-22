@@ -24,6 +24,8 @@ builder.Host.UseWolverine(opts =>
 {
     opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
     opts.UseEntityFrameworkCoreTransactions();
+    opts.UseSystemTextJsonForSerialization(o =>
+        o.Converters.Add(new JsonStringEnumConverter()));
 });
 
 // Razor Pages (HTMX views — EPIC-3)
