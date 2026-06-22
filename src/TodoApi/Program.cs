@@ -13,6 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 // OpenAPI / Scalar
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpClient("TodoApi", (sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(config["TodoApi:BaseUrl"]!);
+});
+
 builder.Services.AddWolverineHttp();
 builder.Host.UseWolverine(opts =>
 {
