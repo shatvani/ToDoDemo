@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -57,6 +58,24 @@ namespace TodoApi.Pages.Todos
 
             if (!postResponse.IsSuccessStatusCode)
             {
+                if ((int)postResponse.StatusCode == 400)
+                {
+                    var stream = await postResponse.Content.ReadAsStreamAsync();
+                    using var jsonDoc = await JsonDocument.ParseAsync(stream);
+                    if (jsonDoc.RootElement.TryGetProperty("errors", out var errorsElement))
+                    {
+                        var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                        foreach (var prop in errorsElement.EnumerateObject())
+                        {
+                            errors[prop.Name] = prop.Value.EnumerateArray()
+                                .Select(e => e.GetString() ?? string.Empty)
+                                .ToArray();
+                        }
+
+                        ViewData["Errors"] = errors;
+                    }
+                }
+
                 return Partial("_TodoForm", null);
             }
 
