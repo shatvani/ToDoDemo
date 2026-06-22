@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} – Todo" : "Todo AI Demo")</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+
+    <header class="bg-white border-b border-gray-200 shadow-sm">
+        <nav class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/todos" class="flex items-center gap-2 text-lg font-semibold text-gray-800 hover:text-blue-600 transition">
+                <span>✅</span>
+                <span>Todo AI Demo</span>
+            </a>
+            <div class="flex items-center gap-6 text-sm text-gray-600">
+                <a href="/todos" class="hover:text-blue-600 transition">Feladatok</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
+        @RenderBody()
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 text-center text-sm text-gray-400 py-4">
+        &copy; @DateTime.Now.Year Todo AI Demo
+    </footer>
+
+    <script src="~/js/htmx.min.js"></script>
+</body>
+</html>

@@ -96,3 +96,7 @@ indent_style = tab
 # így a StyleCop és a többi analyzer nem fut rájuk.
 [**/Migrations/*.cs]
 generated_code = true
+
+# Az ASP.NET Core által generált Razor Page modellekben a StyleCop SA1649 szabálya (file name must match type name) nem releváns, ezért kikapcsoljuk.
+[*.cshtml.cs]
+dotnet_diagnostic.SA1649.severity = none
