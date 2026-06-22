@@ -16,9 +16,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
-    <!-- Validation -->
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-
     <!-- Logging -->
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 
@@ -34,6 +31,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="WolverineFx" Version="6.13.1" />
     <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="6.13.1" />
     <PackageReference Include="WolverineFx.FluentValidation" Version="6.13.1" />

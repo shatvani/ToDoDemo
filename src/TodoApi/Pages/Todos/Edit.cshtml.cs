@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using TodoApi.DTOs;
@@ -59,6 +61,24 @@ namespace TodoApi.Pages.Todos
 
             if (!putResponse.IsSuccessStatusCode)
             {
+                if ((int)putResponse.StatusCode == 400)
+                {
+                    var stream = await putResponse.Content.ReadAsStreamAsync();
+                    using var jsonDoc = await JsonDocument.ParseAsync(stream);
+                    if (jsonDoc.RootElement.TryGetProperty("errors", out var errorsElement))
+                    {
+                        var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                        foreach (var prop in errorsElement.EnumerateObject())
+                        {
+                            errors[prop.Name] = prop.Value.EnumerateArray()
+                                .Select(e => e.GetString() ?? string.Empty)
+                                .ToArray();
+                        }
+
+                        ViewData["Errors"] = errors;
+                    }
+                }
+
                 var todo = await client.GetFromJsonAsync<TodoItemDto>($"/api/todos/{id}");
                 if (todo is null)
                 {
