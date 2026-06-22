@@ -1,0 +1,61 @@
+@page
+@model TodoApi.Pages.Todos.IndexModel
+@{
+    ViewData["Title"] = "Feladatok";
+}
+
+<div class="flex flex-col gap-6">
+
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900">Feladatok</h1>
+    </div>
+
+    <form method="get" class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-wrap gap-3 items-end">
+
+        <div class="flex flex-col gap-1 min-w-36">
+            <label for="Status" class="text-xs font-medium text-gray-500 uppercase tracking-wide">Státusz</label>
+            <select id="Status" name="Status" class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="">Összes</option>
+                <option value="Open"        selected="@(Model.Status == "Open")">Nyitott</option>
+                <option value="InProgress"  selected="@(Model.Status == "InProgress")">Folyamatban</option>
+                <option value="Done"        selected="@(Model.Status == "Done")">Kész</option>
+                <option value="Cancelled"   selected="@(Model.Status == "Cancelled")">Törölve</option>
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-1 min-w-36">
+            <label for="Priority" class="text-xs font-medium text-gray-500 uppercase tracking-wide">Prioritás</label>
+            <select id="Priority" name="Priority" class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="">Összes</option>
+                <option value="Low"    selected="@(Model.Priority == "Low")">Alacsony</option>
+                <option value="Medium" selected="@(Model.Priority == "Medium")">Közepes</option>
+                <option value="High"   selected="@(Model.Priority == "High")">Magas</option>
+                <option value="Urgent" selected="@(Model.Priority == "Urgent")">Kritikus</option>
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-1 min-w-40">
+            <label for="Tag" class="text-xs font-medium text-gray-500 uppercase tracking-wide">Cimke</label>
+            <input id="Tag" name="Tag" type="text" value="@Model.Tag" placeholder="pl. urgent"
+                   class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit"
+                    class="rounded-lg px-4 py-2 text-sm font-medium text-white transition"
+                    style="background-color: #12326e;">
+                Szűrés
+            </button>
+            @if (!string.IsNullOrEmpty(Model.Status) || !string.IsNullOrEmpty(Model.Priority) || !string.IsNullOrEmpty(Model.Tag))
+            {
+                <a href="/todos" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 transition">
+                    Törlés
+                </a>
+            }
+        </div>
+
+    </form>
+
+    @await Html.PartialAsync("_TodoList", Model.Todos)
+
+</div>

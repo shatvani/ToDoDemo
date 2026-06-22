@@ -1,0 +1,92 @@
+@model IEnumerable<TodoApi.DTOs.TodoItemDto>
+
+@{
+    var todos = Model.ToList();
+
+    string StatusBadgeCss(string status) => status switch
+    {
+        "InProgress" => "bg-blue-100 text-blue-700",
+        "Done"       => "bg-green-100 text-green-700",
+        "Cancelled"  => "bg-red-100 text-red-700",
+        _            => "bg-gray-100 text-gray-600",
+    };
+
+    string StatusLabel(string status) => status switch
+    {
+        "InProgress" => "Folyamatban",
+        "Done"       => "Kész",
+        "Cancelled"  => "Törölve",
+        _            => "Nyitott",
+    };
+
+    string PriorityBadgeCss(string priority) => priority switch
+    {
+        "High"   => "bg-orange-100 text-orange-700",
+        "Urgent" => "bg-red-100 text-red-700",
+        "Medium" => "bg-yellow-100 text-yellow-700",
+        _        => "bg-gray-100 text-gray-500",
+    };
+
+    string PriorityLabel(string priority) => priority switch
+    {
+        "High"   => "Magas",
+        "Urgent" => "Kritikus",
+        "Medium" => "Közepes",
+        _        => "Alacsony",
+    };
+}
+
+@if (!todos.Any())
+{
+    <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+        <span class="text-5xl mb-4">📭</span>
+        <p class="text-lg font-medium">Nincs találat</p>
+    </div>
+}
+else
+{
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach (var todo in todos)
+        {
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3">
+
+                <div class="flex items-start justify-between gap-2">
+                    <h2 class="font-semibold text-gray-900 text-base leading-snug">@todo.Title</h2>
+                    <span class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full @StatusBadgeCss(todo.Status)">
+                        @StatusLabel(todo.Status)
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(todo.Description))
+                {
+                    <p class="text-sm text-gray-500 line-clamp-2">@todo.Description</p>
+                }
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full @PriorityBadgeCss(todo.Priority)">
+                        @PriorityLabel(todo.Priority)
+                    </span>
+
+                    @if (todo.DueDate.HasValue)
+                    {
+                        <span class="text-xs text-gray-400 flex items-center gap-1">
+                            <span>📅</span>
+                            <span>@todo.DueDate.Value.ToLocalTime().ToString("yyyy. MM. dd.")</span>
+                        </span>
+                    }
+                </div>
+
+                @if (todo.Tags is { Length: > 0 })
+                {
+                    <div class="flex flex-wrap gap-1">
+                        @foreach (var tag in todo.Tags)
+                        {
+                            <span class="text-xs bg-gray-50 border border-gray-200 text-gray-500 px-2 py-0.5 rounded-full">@tag</span>
+                        }
+                    </div>
+                }
+
+            </div>
+        }
+    </div>
+}
