@@ -2,7 +2,6 @@
 
 > **Típus:** Általános FPH fejlesztési szabvány  
 > **Alkalmazható:** Minden új FPH projekt indulásakor  
-> **Szerző:** Hatvani Sándor (FPH)  
 > **Verzió:** 1.0
 
 ---
@@ -164,7 +163,7 @@ Az interjúk után Claude segíthet összefoglalni és strukturálni az eredmén
 
 ## 4. Meglévő rendszer elemzése
 
-Ha az új rendszer egy meglévőt vált ki vagy egészít ki:
+Ha az új rendszer egy meglévőt vált ki, vagy egészít ki:
 
 ### Amit meg kell vizsgálni
 
@@ -230,6 +229,8 @@ Ha különböző felhasználók vagy a PO és a felhasználók között ellentmo
 1. Dokumentáld az ellentmondást
 2. Hozd össze az érintetteket, és döntsetek közösen
 3. A döntést rögzítsd — ez is lehet ADR tárgya
+
+(Az **ADR** (**Architecture Decision Record**) egy rövid, strukturált dokumentum, amelyben rögzíted egy projekt egy-egy fontos architekturális döntését – nemcsak azt, hogy mit döntöttetek, hanem hogy miért, milyen alternatívák merültek fel, és milyen következményekkel jár.)
 
 Claude segíthet az ellentmondások azonosításában:
 

@@ -2,7 +2,6 @@
 
 > **Típus:** Általános FPH fejlesztési szabvány  
 > **Alkalmazható:** Minden új FPH projekt indulásakor, a tervezési fázis előtt  
-> **Szerző:** Hatvani Sándor (FPH)  
 > **Verzió:** 1.0
 
 ---
@@ -108,7 +107,9 @@ chore/OP-{id}-{rovid-leiras}     # infrastruktúra, konfig
 hotfix/OP-{id}-{rovid-leiras}    # éles gyorsjavítás
 ```
 
-> A `{id}` az OpenProject Work Package sorszáma. Branch nevet **ne adj** mielőtt a WP létezik OP-ban!
+> **Fontos:** A `{id}` **nem** az OpenProject által auto-generált belső WP-azonosító (pl. 3512), hanem a TASKS.md-ben definiált szekvenciális sorszám (pl. `OP-36`). Az OP-ban a WP-k nevét úgy add meg, hogy tartalmazza ezt az azonosítót — pl. `"OP-36: MSSQL health check hozzáadása"`. Így a branch név (`feature/OP-36-db-health-check`) és a TASKS.md mindig összhangban van az OP-val, függetlenül az OP belső ID-jától.
+
+> Branch nevet **ne adj** mielőtt a WP létezik OP-ban!
 
 ---
 
@@ -132,6 +133,18 @@ git push -u origin main
 git checkout -b develop
 git push -u origin develop
 ```
+
+### Kódminőség konfigurációs fájlok
+
+Az első commitba kerüljön bele a kódminőségi infrastruktúra is. Hozd létre ezeket a fájlokat a repo gyökerében:
+
+**`.editorconfig`** — szerkesztő és formázási szabályok (behúzás, sortörés, `var` használat, névkonvenciók). Az IDE és a `dotnet format` ezt olvassa.
+
+**`stylecop.json`** — StyleCop Analyzers Roslyn plugin konfigurációja. Fordítási időben ellenőriz C#-specifikus kódstílus szabályokat (using direktívák sorrendje, dokumentáció szabályok, zárójelek elhelyezése stb.).
+
+**`Directory.Build.props`** — MSBuild fájl, amit a build rendszer automatikusan alkalmaz minden projektfájlra a könyvtárfában. Ide kerül a `TreatWarningsAsErrors=true` és más közös build beállítás.
+
+> Ezek nélkül a `dotnet build` nem fogja érvényesíteni a kódstílus szabályokat, és a CI pipeline-ban a kódminőség ellenőrzés sem fog rendesen működni.
 
 ---
 
@@ -164,28 +177,19 @@ docker compose up -d
 
 ## 5. OpenProject EPIC-ek és Work Package-ek létrehozása
 
-### EPIC-ek létrehozása (Phase típus)
+### EPIC-ek létrehozása
 
-Minden EPIC-hez hozz létre egy **Phase** típusú Work Package-et:
+OpenProjectben az EPIC-eknek a **Phase** típusú Work Package felel meg.
 
-| OP WP | Név | EPIC |
-|---|---|---|
-| Automatikusan sorszámozódik | EPIC-1: Projekt setup | T-01–T-14 |
-| | EPIC-2: Adatmodell és DB | T-15–T-19 |
-| | EPIC-3: API feature slice-ok | T-20–T-52 |
-| | EPIC-4: Frontend (HTMX) | T-53–T-65 |
-| | EPIC-5: CI/CD pipeline | T-66–T-76 |
-| | EPIC-6: OP integráció + E2E | T-77–T-82 |
+Minden EPIC-hez hozz létre egy Phase WP-t, alá pedig **Task** típusú WP-ket a TASKS.md alapján.
 
-### Task Work Package-ek létrehozása
-
-Minden task-hoz (T-01–T-82) hozz létre egy **Task** típusú WP-t a megfelelő EPIC alá. A WP sorszáma lesz a branch névben szereplő `OP-{id}`.
-
-> **Tipp:** Az OP API-val batch-ben is létre lehet hozni WP-ket. Ha sok task van (mint itt: 82), érdemes ezt megvizsgálni a manuális rögzítés helyett. Claude segíthet az API hívások összeállításában, ha kéred.
+Az alárendeléshez a Task WP-n belül a **„Parent"** mezőbe kell beállítani az EPIC Phase WP-t.
 
 ### A WP sorszám és a TASKS.md összekötése
 
-A TASKS.md-ben minden task tartalmaz egy `OP WP` oszlopot (`OP-01`, `OP-02`, …). Ezek az OP-ban automatikusan generált WP-azonosítókra mutatnak. Ha az OP más sorszámot generál mint várták, a TASKS.md-t frissíteni kell.
+A TASKS.md-ben minden task tartalmaz egy `OP WP` oszlopot (`OP-01`, `OP-02`, …). Az OP belső WP-azonosítója eltér ettől — a WP **nevébe** kell beírni a TASKS.md azonosítót (pl. `"OP-36: MSSQL health check hozzáadása"`), hogy a branch névkonvenció és a TASKS.md összehangolható legyen.
+
+> **Tipp:** Az OP API-val batch-ben is létre lehet hozni WP-ket. Ha sok task van, érdemes ezt megvizsgálni a manuális rögzítés helyett. Claude segíthet az API hívások összeállításában, ha kéred.
 
 ---
 
@@ -227,21 +231,7 @@ A Secrets beállítása után futtass egy teszt workflow-t (akár egy üres `wor
 - Az OP Work Package sorszámok (OP-01…OP-N) → bekerülnek a `TASKS.md`-be
 - A branch névkonvenció élő, mert az OP WP-k léteznek
 
-### Review
-
-```
-[ ] GitHub repo létezik és klónolható
-[ ] main és develop branch létezik, branch protection be van állítva
-[ ] OpenProject fut és elérhető
-[ ] OP projekt létezik, EPIC-ek és WP-k létrehozva
-[ ] OP WP sorszámok és a tervezett TASKS.md ID-k egyeznek
-[ ] OP_API_TOKEN és OP_BASE_URL be van állítva GitHub Secrets-ben
-[ ] A runner eléri az OP-t (ha self-hosted)
-```
-
----
-
-## Ellenőrzőlista
+### Ellenőrzőlista
 
 ```
 GitHub
@@ -249,13 +239,14 @@ GitHub
 [ ] main branch protection beállítva (CI check kötelező)
 [ ] develop branch létrehozva és push-olva
 [ ] Helyi klón működik, develop branch aktív
+[ ] .editorconfig, stylecop.json, Directory.Build.props létrehozva és commitolva
 
 OpenProject
 [ ] OP szerver fut és elérhető
 [ ] Projekt létrehozva
 [ ] EPIC-ek létrehozva (Phase WP-k)
-[ ] Összes task WP létrehozva (T-01–T-N)
-[ ] WP sorszámok egyeznek a tervezett TASKS.md ID-kkel
+[ ] Összes task WP létrehozva, nevükben TASKS.md azonosítóval (pl. "OP-36: ...")
+[ ] Task WP-k Parent mezője be van állítva a megfelelő EPIC-re
 
 Összekötés
 [ ] OP API token generálva
@@ -265,7 +256,7 @@ OpenProject
 
 Átadás
 [ ] Átadva a tervezési fázisnak (SPEC.md, TASKS.md)
-[ ] A tervezési fázisban a tényleges OP WP ID-k szerepelnek
+[ ] A tervezési fázisban a TASKS.md azonosítók (OP-01…OP-N) szerepelnek
 ```
 
 ---
