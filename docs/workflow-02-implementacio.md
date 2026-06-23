@@ -2,7 +2,6 @@
 
 > **Típus:** Általános FPH fejlesztési szabvány  
 > **Alkalmazható:** Minden új FPH projekt implementációs fázisában  
-> **Szerző:** Hatvani Sándor (FPH)  
 > **Verzió:** 0.1 (folyamatosan bővül a TodoAiDemo projekt tapasztalatai alapján)
 
 ---
