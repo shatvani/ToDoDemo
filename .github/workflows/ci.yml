@@ -22,3 +22,5 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: dotnet format
+        run: dotnet format --verify-no-changes

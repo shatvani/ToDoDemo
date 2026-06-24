@@ -35,7 +35,7 @@ namespace TodoApi.Tests.Todos
         public async Task GetTodos_EmptyDatabase_Returns200WithEmptyArray()
         {
             // Act
-            var response = await _client.GetAsync("/api/todos");      
+            var response = await _client.GetAsync("/api/todos");
             var result = await response.Content.ReadFromJsonAsync<TodoItemDto[]>();
 
             // Assert
