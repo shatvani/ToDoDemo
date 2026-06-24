@@ -45,7 +45,7 @@
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
-  <Target Name="BuildTailwind" BeforeTargets="Build">
+  <Target Name="BuildTailwind" BeforeTargets="Build" Condition="'$(CI)' != 'true'">
     <Exec Command="$(MSBuildThisFileDirectory)..\..\tools\tailwindcss.exe -i Styles/input.css -o wwwroot/css/site.css --minify" />
   </Target>
 
