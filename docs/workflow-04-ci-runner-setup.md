@@ -22,6 +22,7 @@ A GitHub Actions self-hosted runner egy háttérben futó service a szerveren, a
 - Docker CE telepítve (`docker --version` ellenőrzés)
 - Az admin felhasználó tagja a `docker` csoportnak (`id` parancs ellenőrzés)
 - GitHub repo létezik és admin jogosultság megvan a Settings eléréséhez
+- .NET SDK telepítve a hostra (`dotnet --version` ellenőrzés)
 
 ---
 
@@ -33,6 +34,17 @@ GitHub webes felületen:
 2. Válaszd: **Linux**, **x64**
 3. A GitHub generál egy egyszeri tokent — csak rövid ideig érvényes, azonnal használd
 
+---
+
+## 1b. .NET SDK telepítése
+
+```bash
+wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-10.0
+dotnet --version
+```
 ---
 
 ## 2. Runner letöltés és kicsomagolás
