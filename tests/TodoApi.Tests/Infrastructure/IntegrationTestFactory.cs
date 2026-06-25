@@ -57,8 +57,10 @@ namespace TodoApi.Tests.Infrastructure
             if (!tableExists)
             {
                 var count = db.Database.GetMigrations().Count();
+                var asmPath = typeof(TodoDbContext).Assembly.Location;
+                var built = System.IO.File.GetLastWriteTime(asmPath);
                 throw new InvalidOperationException(
-                    $"T-57: Migrate() lefutott, de a Todos tábla nem létezik. Migrations a futásidejű assembly-ben: {count} " +
+                    $"T-57: Migrate() lefutott, de a Todos tábla nem létezik. Migrations a futásidejű assembly-ben: {count} | DLL: {asmPath} @ {built:O} " +
                     $"Factory connection: [{factoryConn}] | " +
                     $"Container connection: [{containerConn}]");
             }
