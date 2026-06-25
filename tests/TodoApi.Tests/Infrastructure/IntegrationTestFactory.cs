@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -20,11 +21,26 @@ namespace TodoApi.Tests.Infrastructure
         {
             await _db.StartAsync();
 
-            using var scope = Services.CreateScope();
-            var factory = scope.ServiceProvider
-                .GetRequiredService<IDbContextFactory<TodoDbContext>>();
-            await using var db = await factory.CreateDbContextAsync();
-            await db.Database.MigrateAsync();
+            // Nyers ADO.NET — bypass-olja az EF Core migration runnert és a Wolverine
+            // host-szintű regisztrációit. MigrateAsync() a test context-ben 0 pending
+            // migration-t talál (assembly scanning issue), ezért a tábla nem jön létre.
+            await using var connection = new SqlConnection(_db.GetConnectionString());
+            await connection.OpenAsync();
+            await using var cmd = new SqlCommand(@"
+                IF OBJECT_ID(N'[Todos]', N'U') IS NULL
+                    CREATE TABLE [Todos] (
+                        [Id]          uniqueidentifier NOT NULL,
+                        [Title]       nvarchar(200)    NOT NULL,
+                        [Description] nvarchar(max)    NULL,
+                        [Status]      int              NOT NULL,
+                        [Priority]    int              NOT NULL,
+                        [CreatedAt]   datetime2        NOT NULL,
+                        [UpdatedAt]   datetime2        NOT NULL,
+                        [DueDate]     datetime2        NULL,
+                        [Tags]        nvarchar(max)    NULL,
+                        CONSTRAINT [PK_Todos] PRIMARY KEY ([Id])
+                    )", connection);
+            await cmd.ExecuteNonQueryAsync();
         }
 
         public new async Task DisposeAsync()
@@ -51,12 +67,10 @@ namespace TodoApi.Tests.Infrastructure
 
         public async Task ResetDatabaseAsync()
         {
-            using var scope = Services.CreateScope();
-            var factory = scope.ServiceProvider
-                .GetRequiredService<IDbContextFactory<TodoDbContext>>();
-            await using var db = await factory.CreateDbContextAsync();
-            db.Todos.RemoveRange(db.Todos);
-            await db.SaveChangesAsync();
+            await using var connection = new SqlConnection(_db.GetConnectionString());
+            await connection.OpenAsync();
+            await using var cmd = new SqlCommand("DELETE FROM [Todos]", connection);
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

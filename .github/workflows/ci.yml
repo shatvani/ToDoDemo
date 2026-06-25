@@ -28,3 +28,6 @@ jobs:
 
       - name: dotnet build
         run: dotnet build --no-incremental -warnaserror -p:SkipTailwind=true
+
+      - name: dotnet test
+        run: dotnet test --collect:"XPlat Code Coverage" --logger "junit;LogFilePath=../../test-results.xml" -p:SkipTailwind=true -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover

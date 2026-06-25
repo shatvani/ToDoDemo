@@ -11,7 +11,8 @@ using Xunit;
 
 namespace TodoApi.Tests.Todos
 {
-    public class GetTodoByIdTests : IClassFixture<IntegrationTestFactory>, IAsyncLifetime
+    [Collection("Integration")]
+    public class GetTodoByIdTests : IAsyncLifetime
     {
         private readonly IntegrationTestFactory _factory;
         private readonly HttpClient _client;
