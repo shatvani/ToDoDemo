@@ -20,10 +20,9 @@ namespace TodoApi.Tests.Infrastructure
         {
             await _db.StartAsync();
 
-            using var scope = Services.CreateScope();
-            var factory = scope.ServiceProvider
-                .GetRequiredService<IDbContextFactory<TodoDbContext>>();
-            await using var db = await factory.CreateDbContextAsync();
+            // Közvetlen DbContext — bypass-olja a DI-t és a Wolverine host-szintű
+            // service-regisztrációit, amelyek a ConfigureWebHost() UTÁN futnak.
+            await using var db = CreateDirectDbContext();
             await db.Database.MigrateAsync();
         }
 
@@ -51,12 +50,16 @@ namespace TodoApi.Tests.Infrastructure
 
         public async Task ResetDatabaseAsync()
         {
-            using var scope = Services.CreateScope();
-            var factory = scope.ServiceProvider
-                .GetRequiredService<IDbContextFactory<TodoDbContext>>();
-            await using var db = await factory.CreateDbContextAsync();
-            db.Todos.RemoveRange(db.Todos);
-            await db.SaveChangesAsync();
+            await using var db = CreateDirectDbContext();
+            await db.Set<TodoItem>().ExecuteDeleteAsync();
+        }
+
+        private TodoDbContext CreateDirectDbContext()
+        {
+            var options = new DbContextOptionsBuilder<TodoDbContext>()
+                .UseSqlServer(_db.GetConnectionString())
+                .Options;
+            return new TodoDbContext(options);
         }
     }
 }
