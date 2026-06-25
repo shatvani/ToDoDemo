@@ -31,14 +31,32 @@ namespace TodoApi.Tests.Infrastructure
         {
             var host = base.CreateHost(builder);
 
-            // MigrateAsync a host teljes konfigurálása UTÁN fut — ConfigureWebHost() +
-            // Wolverine IHostBuilder.ConfigureServices() is lefutott már. A DI container
-            // a mi test factory-nkat adja vissza (_db.GetConnectionString()).
             using var scope = host.Services.CreateScope();
-            var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<TodoDbContext>>();
-            using var db = factory.CreateDbContext();
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<TodoDbContext>>();
+            using var db = dbFactory.CreateDbContext();
+
+            var factoryConn = db.Database.GetConnectionString() ?? "(null)";
+            var containerConn = _db.GetConnectionString();
+
+            var pending = db.Database.GetPendingMigrations().ToList();
+            Console.WriteLine($"[TEST] Pending migrations: {string.Join(", ", pending)}");
+
             db.Database.Migrate();
 
+            // T-57 DIAGNOSTIC: ellenőrzés, hogy a Migrate() a helyes DB-n futott-e
+            using var conn = db.Database.GetDbConnection();
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT CAST(CASE WHEN OBJECT_ID('Todos','U') IS NOT NULL THEN 1 ELSE 0 END AS INT)";
+            var tableExists = (int)cmd.ExecuteScalar()! == 1;
+
+            if (!tableExists)
+            {
+                throw new InvalidOperationException(
+                    $"T-57: Migrate() lefutott, de a Todos tábla nem létezik. " +
+                    $"Factory connection: [{factoryConn}] | " +
+                    $"Container connection: [{containerConn}]");
+            }
             return host;
         }
 
