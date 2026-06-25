@@ -23,11 +23,31 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug migrations presence
+        run: |
+          echo "=== git state ==="
+          git log --oneline -5
+          git rev-parse HEAD
+          echo "=== Migrations on disk ==="
+          ls -la src/TodoApi/Migrations/ || echo "NINCS Migrations mappa a runneren!"
+          echo "=== git tracked ==="
+          git ls-files src/TodoApi/Migrations/
+
       - name: dotnet format
         run: dotnet format --verify-no-changes
 
       - name: dotnet build
         run: dotnet build --no-incremental -warnaserror -p:SkipTailwind=true
 
+      - name: Debug — vannak-e migrációk a runneren?
+        run: |
+          echo "=== HEAD ==="
+          git rev-parse HEAD
+          git log --oneline -3
+          echo "=== Migrations mappa a lemezen ==="
+          ls -la src/TodoApi/Migrations/ 2>&1 || echo ">>> NINCS Migrations mappa <<<"
+          echo "=== A lefordított DLL-ben lévő migrációs típusok ==="
+          find . -name TodoApi.dll -path '*/bin/*' -exec sh -c 'echo "-- {} --"; dotnet ildasm "{}" --il 2>/dev/null | grep -i "InitialCreate\|MapTagsAsPrimitiveCollection" | head' \; 2>/dev/null || echo "ildasm nem elérhető"
+
       - name: dotnet test
-        run: dotnet test --collect:"XPlat Code Coverage" --logger "junit;LogFilePath=../../test-results.xml" -p:SkipTailwind=true -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        run: dotnet test --no-build -p:SkipTailwind=true --collect:"XPlat Code Coverage" --logger "junit;LogFilePath=../../test-results.xml" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
