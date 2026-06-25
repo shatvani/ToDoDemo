@@ -49,11 +49,7 @@ builder.Services.AddDbContextFactory<TodoDbContext>((sp, opts) =>
 builder.Services.ConfigureHttpJsonOptions(opts =>
     opts.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// TODO EPIC-2: FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
-// TODO EPIC-2: Application Insights
-/* builder.Services.AddApplicationInsightsTelemetry(); */
 
 var app = builder.Build();
 
@@ -67,12 +63,9 @@ app.UseStaticFiles();
 app.MapRazorPages();
 app.MapHealthChecks("/api/health");
 
-// TODO EPIC-2: Feature slice endpoints
-/* app.MapTodoEndpoints(); */
-
 app.MapWolverineEndpoints(opts =>
 {
     opts.UseFluentValidationProblemDetailMiddleware();
 });
 
-app.Run();
+await app.RunAsync();
