@@ -23,6 +23,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug migrations presence
+        run: |
+          echo "=== git state ==="
+          git log --oneline -5
+          git rev-parse HEAD
+          echo "=== Migrations on disk ==="
+          ls -la src/TodoApi/Migrations/ || echo "NINCS Migrations mappa a runneren!"
+          echo "=== git tracked ==="
+          git ls-files src/TodoApi/Migrations/
+
       - name: dotnet format
         run: dotnet format --verify-no-changes
 
