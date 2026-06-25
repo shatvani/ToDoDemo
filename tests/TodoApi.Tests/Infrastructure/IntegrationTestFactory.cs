@@ -56,8 +56,9 @@ namespace TodoApi.Tests.Infrastructure
 
             if (!tableExists)
             {
+                var count = db.Database.GetMigrations().Count();
                 throw new InvalidOperationException(
-                    $"T-57: Migrate() lefutott, de a Todos tábla nem létezik. " +
+                    $"T-57: Migrate() lefutott, de a Todos tábla nem létezik. Migrations a futásidejű assembly-ben: {count} " +
                     $"Factory connection: [{factoryConn}] | " +
                     $"Container connection: [{containerConn}]");
             }
