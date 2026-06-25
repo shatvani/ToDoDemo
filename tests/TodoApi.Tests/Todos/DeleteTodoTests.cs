@@ -9,7 +9,8 @@ using Xunit;
 
 namespace TodoApi.Tests.Todos
 {
-    public class DeleteTodoTests : IClassFixture<IntegrationTestFactory>, IAsyncLifetime
+    [Collection("Integration")]
+    public class DeleteTodoTests : IAsyncLifetime
     {
         private readonly IntegrationTestFactory _factory;
         private readonly HttpClient _client;

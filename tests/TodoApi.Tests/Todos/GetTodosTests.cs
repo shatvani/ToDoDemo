@@ -12,10 +12,11 @@ using Xunit;
 namespace TodoApi.Tests.Todos
 {
     /*
-     * IClassFixture<IntegrationTestFactory> — egy Docker SQL Server konténer az egész osztályhoz (gyors)
-     * IAsyncLifetime.InitializeAsync() — ExecuteDeleteAsync() törli a Todos táblát minden teszt előtt (EF Core 7+ bulk delete, egyetlen SQL DELETE utasítás)
+     * [Collection("Integration")] — megosztott IntegrationTestFactory fixture az összes tesztosztályban (1 konténer az egész teszt assembly-hez)
+     * IAsyncLifetime.InitializeAsync() — ResetDatabaseAsync() törli a Todos táblát minden teszt előtt
      */
-    public class GetTodosTests : IClassFixture<IntegrationTestFactory>, IAsyncLifetime
+    [Collection("Integration")]
+    public class GetTodosTests : IAsyncLifetime
     {
         private readonly IntegrationTestFactory _factory;
         private readonly HttpClient _client;
