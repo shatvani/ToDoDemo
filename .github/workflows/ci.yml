@@ -38,7 +38,7 @@ jobs:
           dotnet sonarscanner begin \
             /k:"shatvani_ToDoDemo" \
             /o:"shatvani" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
 
       - name: dotnet build
@@ -50,4 +50,4 @@ jobs:
       - name: SonarCloud end
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
