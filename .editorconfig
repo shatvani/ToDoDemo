@@ -95,8 +95,8 @@ indent_style = tab
 
 # Az EF Core által generált migrációs fájlokat generált kódként kezeljük,
 # így a StyleCop és a többi analyzer nem fut rájuk.
-[**/Migrations/*.cs]
-generated_code = true
+# [**/Migrations/*.cs]
+# generated_code = true
 
 # Az ASP.NET Core által generált Razor Page modellekben a StyleCop SA1649 szabálya (file name must match type name) nem releváns, ezért kikapcsoljuk.
 [*.cshtml.cs]

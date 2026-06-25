@@ -106,7 +106,8 @@ coverage-report/
 
 # Entity Framework Core Migrations (compiled)
 # Keep .cs migration files, ignore compiled artifacts
-**/Migrations/*Designer.cs
+# **/Migrations/*Designer.cs
+!**/Migrations/*.Designer.cs
 
 # Secrets — NEVER commit
 appsettings.Production.json
