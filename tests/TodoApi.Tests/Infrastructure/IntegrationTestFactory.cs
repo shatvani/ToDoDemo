@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -38,8 +39,11 @@ namespace TodoApi.Tests.Infrastructure
             var factoryConn = db.Database.GetConnectionString() ?? "(null)";
             var containerConn = _db.GetConnectionString();
 
-            var pending = db.Database.GetPendingMigrations().ToList();
-            Console.WriteLine($"[TEST] Pending migrations: {string.Join(", ", pending)}");
+            // ---- ideiglenes diagnosztika ----
+            Console.WriteLine($"[TEST] Conn: {db.Database.GetConnectionString()}");
+            Console.WriteLine($"[TEST] All migrations: {string.Join(", ", db.Database.GetMigrations())}");
+            Console.WriteLine($"[TEST] Pending: {string.Join(", ", db.Database.GetPendingMigrations())}");
+            // ----------------------------------
 
             db.Database.Migrate();
 
