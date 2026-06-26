@@ -7,7 +7,7 @@
 import { Octokit } from "@octokit/rest";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const PR_NUMBER    = parseInt(process.env.PR_NUMBER, 10);
+const PR_NUMBER    = Number.parseInt(process.env.PR_NUMBER, 10);
 const REPO         = process.env.REPO; // "owner/repo"
 
 if (!GITHUB_TOKEN || !PR_NUMBER || !REPO) {
@@ -133,7 +133,7 @@ async function main() {
     console.log("Kész.");
 }
 
-main().catch((err) => {
+await main().catch((err) => {
     console.error("Hiba:", err.message ?? err);
     process.exit(1);
 });
