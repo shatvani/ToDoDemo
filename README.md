@@ -2,8 +2,8 @@
 
 > **Demo projekt** — AI-támogatott fejlesztői workflow bemutatása ASP.NET Core 10 + HTMX + GitHub Actions környezetben.
 
-![CI](https://github.com/{personal-github}/todo-ai-demo/actions/workflows/ci.yml/badge.svg)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=todo-ai-demo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=todo-ai-demo)
+![CI](https://github.com/shatvani/ToDoDemo/actions/workflows/ci.yml/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=shatvani_ToDoDemo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=shatvani_ToDoDemo)
 
 ---
 
@@ -42,7 +42,7 @@ Ez egy Todo alkalmazás, de a lényeg nem a Todo funkcionalitás — hanem az **
 
 ```bash
 # 1. Klónozás
-git clone https://github.com/{personal-github}/todo-ai-demo.git
+git clone https://github.com/shatvani/ToDoDemo.git
 cd todo-ai-demo
 
 # 2. PostgreSQL indítása Docker-rel
