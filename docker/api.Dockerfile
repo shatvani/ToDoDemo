@@ -11,11 +11,11 @@ RUN dotnet restore "src/TodoApi/TodoApi.csproj"
 # Build
 COPY . .
 WORKDIR "/src/src/TodoApi"
-RUN dotnet build "TodoApi.csproj" -c Release -o /app/build
+RUN dotnet build "TodoApi.csproj" -c Release -o /app/build -p:SkipTailwind=true
 
 # ── Stage 2: Publish ──────────────────────────────────────────────────────────
 FROM build AS publish
-RUN dotnet publish "TodoApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "TodoApi.csproj" -c Release -o /app/publish /p:UseAppHost=false -p:SkipTailwind=true
 
 # ── Stage 3: Runtime ──────────────────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
