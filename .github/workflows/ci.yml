@@ -61,6 +61,7 @@ jobs:
 
     permissions:
       pull-requests: write
+      models: read
 
     steps:
       - name: Checkout
