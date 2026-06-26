@@ -63,7 +63,19 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Copilot Code Review
-        uses: github/copilot-code-review@v1
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci
+
+      - name: AI Code Review (GitHub Models)
+        working-directory: .github/scripts
+        run: node ai-code-review.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}

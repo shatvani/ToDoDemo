@@ -133,3 +133,5 @@ _work/
 
 tools/tailwindcss.exe
 src/TodoApi/wwwroot/css/site.css
+
+.github/scripts/node_modules/
