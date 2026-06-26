@@ -124,3 +124,35 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  ai-pr-description:
+    name: AI PR Description
+    runs-on: self-hosted
+    needs: ci
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+
+    permissions:
+      pull-requests: write
+      models: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
+      - name: AI PR Description (GitHub Models)
+        working-directory: .github/scripts
+        run: node ai-pr-description.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
