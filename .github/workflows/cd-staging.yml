@@ -39,12 +39,14 @@ jobs:
           git push origin $NEW_TAG
 
       - name: SSH Deploy
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            cd /opt/todo-ai-demo
-            docker compose -f docker-compose.staging.yml pull
-            IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          ssh -i ~/.ssh/staging_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} \
+            "cd /opt/todo-ai-demo && \
+             docker compose -f docker-compose.staging.yml pull && \
+             IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d"
+          rm ~/.ssh/staging_key
