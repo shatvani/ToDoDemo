@@ -1,3 +1,7 @@
+networks:
+  proxy:
+    external: true
+
 services:
 
   db:
@@ -19,27 +23,19 @@ services:
       - "5432"
 
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY}/todo-ai-demo:${IMAGE_TAG:-latest}
+    image: ghcr.io/shatvani/todo-ai-demo:${IMAGE_TAG:-main}
     container_name: todo-api-staging
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       ConnectionStrings__DefaultConnection: "Host=db;Database=tododb;Username=todo;Password=${DB_PASSWORD}"
-      ApplicationInsights__ConnectionString: ${APPINSIGHTS_CONNECTION_STRING}
     expose:
       - "8080"
     depends_on:
       db:
         condition: service_healthy
-
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: todo-nginx-staging
-    ports:
-      - "80:80"
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - api
+    networks:
+      - default
+      - proxy
 
 volumes:
   todo-db-staging-data:
