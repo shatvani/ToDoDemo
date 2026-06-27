@@ -41,10 +41,12 @@ jobs:
     steps:
       - name: OP Work Package ID kinyerése
         id: wp
+        env:
+          BRANCH: ${{ inputs.branch }}
+          WP_IDS: ${{ inputs.work_package_ids }}
         run: |
-          BRANCH="${{ inputs.branch }}"
-          if [ -n "${{ inputs.work_package_ids }}" ]; then
-            WP_ID="${{ inputs.work_package_ids }}"
+          if [ -n "$WP_IDS" ]; then
+            WP_ID="$WP_IDS"
           else
             WP_ID=$(echo "$BRANCH" | grep -oP 'OP-\K[0-9]+' || echo "")
           fi
