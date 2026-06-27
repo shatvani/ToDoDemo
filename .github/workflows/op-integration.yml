@@ -56,3 +56,28 @@ jobs:
             echo "✅ WP ID: $WP_ID"
           fi
           echo "wp_id=$WP_ID" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
+      - name: OP WP Komment
+        if: steps.wp.outputs.wp_id != ''
+        working-directory: .github/scripts
+        run: node op-comment.js
+        env:
+          OP_BASE_URL: ${{ secrets.OP_BASE_URL }}
+          OP_API_TOKEN: ${{ secrets.OP_API_TOKEN }}
+          WP_ID: ${{ steps.wp.outputs.wp_id }}
+          EVENT_TYPE: ${{ inputs.event_type }}
+          BRANCH: ${{ inputs.branch }}
+          COMMIT_SHA: ${{ inputs.commit_sha }}
+          LOG_EXCERPT: ${{ inputs.log_excerpt }}
