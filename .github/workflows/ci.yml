@@ -7,10 +7,16 @@ on:
       - 'feature/**'
       - 'chore/**'
       - 'bugfix/**'
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
   pull_request:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
 
 jobs:
   ci:
