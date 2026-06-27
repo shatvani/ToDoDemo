@@ -26,10 +26,8 @@ jobs:
       - name: dotnet format
         run: dotnet format --verify-no-changes
 
-      - name: Install SonarCloud scanner
-        run: |
-          dotnet tool update --global dotnet-sonarscanner
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: SonarCloud scanner PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
       - name: SonarCloud begin
         env:
