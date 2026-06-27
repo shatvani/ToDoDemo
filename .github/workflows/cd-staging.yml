@@ -14,6 +14,7 @@ jobs:
 
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -81,3 +82,46 @@ jobs:
           rm ~/.ssh/staging_key
           echo "❌ Health check sikertelen 5 kísérlet után"
           exit 1
+
+      - name: Smoke Test
+        id: smoke
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          HEALTH=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST \
+            "curl -s -o /tmp/health_body.txt -w '%{http_code}|%{time_total}' http://localhost:8080/api/health")
+          HEALTH_STATUS=$(echo $HEALTH | cut -d'|' -f1)
+          HEALTH_TIME=$(echo $HEALTH | cut -d'|' -f2)
+          HEALTH_BODY=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST "cat /tmp/health_body.txt")
+          TODOS=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST \
+            "curl -s -o /dev/null -w '%{http_code}|%{time_total}' http://localhost:8080/api/todos")
+          TODOS_STATUS=$(echo $TODOS | cut -d'|' -f1)
+          TODOS_TIME=$(echo $TODOS | cut -d'|' -f2)
+          rm ~/.ssh/staging_key
+          echo "health_status=$HEALTH_STATUS" >> $GITHUB_OUTPUT
+          echo "health_time=$HEALTH_TIME" >> $GITHUB_OUTPUT
+          echo "health_body=$HEALTH_BODY" >> $GITHUB_OUTPUT
+          echo "todos_status=$TODOS_STATUS" >> $GITHUB_OUTPUT
+          echo "todos_time=$TODOS_TIME" >> $GITHUB_OUTPUT
+
+      - name: AI Smoke Test Summary
+        continue-on-error: true
+        working-directory: .github/scripts
+        run: node ai-smoke-test.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEALTH_STATUS: ${{ steps.smoke.outputs.health_status }}
+          HEALTH_TIME: ${{ steps.smoke.outputs.health_time }}
+          HEALTH_BODY: ${{ steps.smoke.outputs.health_body }}
+          TODOS_STATUS: ${{ steps.smoke.outputs.todos_status }}
+          TODOS_TIME: ${{ steps.smoke.outputs.todos_time }}
