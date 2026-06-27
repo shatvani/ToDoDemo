@@ -49,10 +49,13 @@ Válaszolj magyarul, tömören.`;
     return data.choices[0].message.content;
 }
 
-const opHeaders = () => ({
-    'Authorization': `Basic ${Buffer.from(`apikey:${OP_API_TOKEN}`).toString('base64')}`,
-    'Content-Type': 'application/json',
-});
+const opHeaders = () => {
+    const credentials = `apikey:${OP_API_TOKEN}`;
+    return {
+        'Authorization': `Basic ${Buffer.from(credentials).toString('base64')}`,
+        'Content-Type': 'application/json',
+    };
+};
 
 async function getTypeId(name) {
     const res = await fetch(`${OP_BASE_URL}/api/v3/types`, { headers: opHeaders() });
@@ -103,18 +106,17 @@ async function createBugWp(analysis) {
 
     if (!res.ok) throw new Error(`OP Bug WP létrehozás hiba: ${res.status} ${await res.text()}`);
     const wp = await res.json();
-    console.log(`✅ Bug WP létrehozva: ${OP_BASE_URL}/work_packages/${wp.id}`);
+    const wpId = String(wp.id);
+    console.log(`✅ Bug WP létrehozva: ${OP_BASE_URL}/work_packages/${wpId}`);
 }
 
-async function main() {
-    console.log(`Build failure elemzés: ${BRANCH}...`);
+try {
+    console.log('Build failure elemzés...');
     const analysis = await analyzeFailure();
     console.log('OP Bug WP létrehozása...');
     await createBugWp(analysis);
     console.log('Kész.');
-}
-
-main().catch(err => {
+} catch (err) {
     console.error('⚠️ Build failure analysis sikertelen (nem kritikus):', err.message);
     process.exit(0);
-});
+}
