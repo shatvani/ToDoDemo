@@ -104,10 +104,10 @@ async function createBugWp(analysis) {
         body: JSON.stringify(body),
     });
 
-    if (!res.ok) throw new Error(`OP Bug WP létrehozás hiba: ${res.status} ${await res.text()}`);
+    if (!res.ok) throw new Error(`OP Bug WP létrehozás hiba: ${res.status}`);
     const wp = await res.json();
-    const wpId = String(wp.id);
-    console.log(`✅ Bug WP létrehozva: ${OP_BASE_URL}/work_packages/${wpId}`);
+    const wpId = Number(wp.id);
+    console.log(`✅ Bug WP létrehozva, ID: ${wpId}`);
 }
 
 try {
@@ -116,7 +116,7 @@ try {
     console.log('OP Bug WP létrehozása...');
     await createBugWp(analysis);
     console.log('Kész.');
-} catch (err) {
-    console.error('⚠️ Build failure analysis sikertelen (nem kritikus):', err.message);
+} catch {
+    console.error('⚠️ Build failure analysis sikertelen (nem kritikus).');
     process.exit(0);
 }
