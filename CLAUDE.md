@@ -88,6 +88,7 @@ Az architektúra döntések dokumentálva vannak a `docs/adr/` mappában.
 | [ADR-002](docs/adr/ADR-002-sonarcloud-vs-sonarqube.md) | SonarCloud az önhosztolt SonarQube helyett | ✅ Elfogadva |
 | [ADR-003](docs/adr/ADR-003-copilot-vs-claude-pipeline.md) | Claude API a pipeline-ban (Copilot helyett) | ✅ Felülvizsgálva |
 | [ADR-004](docs/adr/ADR-004-wolverine-vs-mediatr.md) | Wolverine a MediatR helyett (CQRS mediator) | ✅ Elfogadva |
+| [ADR-005](docs/adr/ADR-005-conventional-commits.md) | Conventional Commits + OP azonosító konvenció | ✅ Elfogadva |
 
 Új architektúra döntésnél: hozz létre új ADR-t a fenti sablonnal, és add hozzá az indexhez.
 
