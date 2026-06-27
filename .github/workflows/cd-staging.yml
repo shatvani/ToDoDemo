@@ -54,3 +54,30 @@ jobs:
              docker compose -f docker-compose.staging.yml pull && \
              IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d"
           rm ~/.ssh/staging_key
+
+      - name: Health Check
+        env:
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          for i in 1 2 3 4 5; do
+            echo "Health check kísérlet $i/5..."
+            STATUS=$(ssh -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              $DEPLOY_USER@$DEPLOY_HOST \
+              "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health" 2>/dev/null)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check sikeres (HTTP $STATUS)"
+              rm ~/.ssh/staging_key
+              exit 0
+            fi
+            echo "⏳ HTTP $STATUS — várakozás 6 másodpercet..."
+            sleep 6
+          done
+          rm ~/.ssh/staging_key
+          echo "❌ Health check sikertelen 5 kísérlet után"
+          exit 1
