@@ -37,3 +37,20 @@ jobs:
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
           git tag $NEW_TAG
           git push origin $NEW_TAG
+
+      - name: SSH Deploy
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          ssh -i ~/.ssh/staging_key \
+            -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST \
+            "cd /opt/todo-ai-demo && \
+             docker compose -f docker-compose.staging.yml pull && \
+             IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d"
+          rm ~/.ssh/staging_key
