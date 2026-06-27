@@ -1,0 +1,58 @@
+name: OpenProject Integration
+
+on:
+  workflow_call:
+    inputs:
+      event_type:
+        description: 'build_failed | build_passed | deployed | deploy_failed'
+        required: true
+        type: string
+      branch:
+        description: 'Branch neve (OP-{id} kinyeréshez)'
+        required: true
+        type: string
+      commit_sha:
+        description: 'Commit hash'
+        required: true
+        type: string
+      log_excerpt:
+        description: 'Hibalog (opcionális, failed esetén)'
+        required: false
+        type: string
+        default: ''
+      work_package_ids:
+        description: 'Érintett WP azonosítók, vesszővel elválasztva (opcionális)'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      OP_API_TOKEN:
+        required: true
+      OP_BASE_URL:
+        required: true
+      OP_PROJECT_ID:
+        required: true
+
+jobs:
+  op-integration:
+    name: OpenProject Integration
+    runs-on: self-hosted
+
+    steps:
+      - name: OP Work Package ID kinyerése
+        id: wp
+        env:
+          BRANCH: ${{ inputs.branch }}
+          WP_IDS: ${{ inputs.work_package_ids }}
+        run: |
+          if [ -n "$WP_IDS" ]; then
+            WP_ID="$WP_IDS"
+          else
+            WP_ID=$(echo "$BRANCH" | grep -oP 'OP-\K[0-9]+' || echo "")
+          fi
+          if [ -z "$WP_ID" ]; then
+            echo "⚠️ Nem található OP WP ID a branch névben: $BRANCH"
+          else
+            echo "✅ WP ID: $WP_ID"
+          fi
+          echo "wp_id=$WP_ID" >> $GITHUB_OUTPUT
