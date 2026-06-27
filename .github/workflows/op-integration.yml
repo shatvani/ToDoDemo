@@ -60,6 +60,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
       - name: OP WP Komment
         if: steps.wp.outputs.wp_id != ''
         working-directory: .github/scripts
