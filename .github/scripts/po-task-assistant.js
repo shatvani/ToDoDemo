@@ -1,32 +1,15 @@
 // po-task-assistant.js — T-79–T-82
 // User Story-k alá AI-generált Task-ok létrehozása (B megközelítés: polling)
 
+import { callGhModels } from "./gh-models.js";
+import { opHeaders, getTypeId, getStatusId } from "./op-api.js";
+
 const GITHUB_TOKEN  = process.env.GITHUB_TOKEN;
 const OP_BASE_URL   = process.env.OP_BASE_URL;
 const OP_API_TOKEN  = process.env.OP_API_TOKEN;
 const OP_PROJECT_ID = process.env.OP_PROJECT_ID;
 
 const MODEL = "gpt-4o";
-
-const opHeaders = () => {
-    const credentials = `apikey:${OP_API_TOKEN}`;
-    return {
-        'Authorization': `Basic ${Buffer.from(credentials).toString('base64')}`,
-        'Content-Type': 'application/json',
-    };
-};
-
-async function getTypeId(name) {
-    const res = await fetch(`${OP_BASE_URL}/api/v3/types`, { headers: opHeaders() });
-    const data = await res.json();
-    return data._embedded.elements.find(t => t.name.toLowerCase() === name.toLowerCase())?.id ?? null;
-}
-
-async function getStatusId(name) {
-    const res = await fetch(`${OP_BASE_URL}/api/v3/statuses`, { headers: opHeaders() });
-    const data = await res.json();
-    return data._embedded.elements.find(s => s.name.toLowerCase() === name.toLowerCase())?.id ?? null;
-}
 
 async function getUserStories(typeId, statusId) {
     const filters = JSON.stringify([
@@ -35,7 +18,7 @@ async function getUserStories(typeId, statusId) {
     ]);
     const res = await fetch(
         `${OP_BASE_URL}/api/v3/projects/${OP_PROJECT_ID}/work_packages?filters=${encodeURIComponent(filters)}&pageSize=50`,
-        { headers: opHeaders() }
+        { headers: opHeaders(OP_API_TOKEN) }
     );
     const data = await res.json();
     return data._embedded?.elements ?? [];
@@ -44,7 +27,7 @@ async function getUserStories(typeId, statusId) {
 async function hasChildren(wpId) {
     const res = await fetch(
         `${OP_BASE_URL}/api/v3/work_packages/${wpId}/children`,
-        { headers: opHeaders() }
+        { headers: opHeaders(OP_API_TOKEN) }
     );
     const data = await res.json();
     return (data._embedded?.elements?.length ?? 0) > 0;
@@ -67,23 +50,13 @@ Válaszolj kizárólag JSON tömbben, ebben a formátumban:
 
 Csak a JSON tömböt add vissza, semmi mást.`;
 
-    const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${GITHUB_TOKEN}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: MODEL,
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.4,
-            max_tokens: 1024,
-        }),
+    const raw = await callGhModels(GITHUB_TOKEN, {
+        model: MODEL,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.4,
+        max_tokens: 1024,
     });
-
-    if (!response.ok) throw new Error(`GitHub Models API hiba: ${response.status}`);
-    const data = await response.json();
-    const content = data.choices[0].message.content.trim();
+    const content = raw.trim();
     const start = content.indexOf('[');
     const end = content.lastIndexOf(']');
     if (start === -1 || end === -1 || end <= start) throw new Error('AI nem adott vissza valid JSON tömböt');
@@ -106,7 +79,7 @@ async function createTask(parentId, taskTypeId, statusId, subject, description) 
 
     const res = await fetch(`${OP_BASE_URL}/api/v3/projects/${OP_PROJECT_ID}/work_packages`, {
         method: 'POST',
-        headers: opHeaders(),
+        headers: opHeaders(OP_API_TOKEN),
         body: JSON.stringify(body),
     });
 
@@ -118,9 +91,9 @@ try {
     console.log('PO Task Assistant indul...');
 
     const [userStoryTypeId, taskTypeId, newStatusId] = await Promise.all([
-        getTypeId('User Story'),
-        getTypeId('Task'),
-        getStatusId('New'),
+        getTypeId(OP_BASE_URL, OP_API_TOKEN, 'User Story'),
+        getTypeId(OP_BASE_URL, OP_API_TOKEN, 'Task'),
+        getStatusId(OP_BASE_URL, OP_API_TOKEN, 'New'),
     ]);
 
     if (!userStoryTypeId) throw new Error('User Story típus nem található');

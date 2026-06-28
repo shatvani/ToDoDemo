@@ -5,6 +5,7 @@
 //   REPO          — "owner/repo" formátum
 
 import { Octokit } from "@octokit/rest";
+import { callGhModels } from "./gh-models.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const PR_NUMBER    = Number.parseInt(process.env.PR_NUMBER, 10);
@@ -79,29 +80,15 @@ ${truncatedDiff}
 
 Generáld a PR leírást.`;
 
-    const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${GITHUB_TOKEN}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: MODEL,
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user",   content: userPrompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 1024,
-        }),
+    return callGhModels(GITHUB_TOKEN, {
+        model: MODEL,
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user",   content: userPrompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 1024,
     });
-
-    if (!response.ok) {
-        throw new Error(`GitHub Models API hiba: ${response.status} ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
 }
 
 async function updatePrDescription(body) {
