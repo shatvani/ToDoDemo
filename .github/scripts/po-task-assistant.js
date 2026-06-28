@@ -84,9 +84,10 @@ Csak a JSON tömböt add vissza, semmi mást.`;
     if (!response.ok) throw new Error(`GitHub Models API hiba: ${response.status}`);
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('AI nem adott vissza valid JSON tömböt');
-    return JSON.parse(jsonMatch[0]);
+    const start = content.indexOf('[');
+    const end = content.lastIndexOf(']');
+    if (start === -1 || end === -1 || end <= start) throw new Error('AI nem adott vissza valid JSON tömböt');
+    return JSON.parse(content.slice(start, end + 1));
 }
 
 async function createTask(parentId, taskTypeId, statusId, subject, description) {
@@ -127,7 +128,7 @@ try {
     if (!newStatusId) throw new Error('New státusz nem található');
 
     const userStories = await getUserStories(userStoryTypeId, newStatusId);
-    console.log(`${userStories.length} New státuszú User Story található.`);
+    console.log('New státuszú User Story-k lekérve.');
 
     let processed = 0;
     // Szekvenciális feldolgozás: elkerüli az API rate limit problémákat
