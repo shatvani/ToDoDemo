@@ -43,73 +43,37 @@ jobs:
       - name: Copy docker-compose to server
         run: cp docker-compose.staging.yml /opt/todo-ai-demo/docker-compose.staging.yml
 
-      - name: SSH Deploy
-        env:
-          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
-          DEPLOY_USER: ${{ secrets.STAGING_USER }}
-          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+      - name: Deploy
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
-          chmod 600 ~/.ssh/staging_key
-          ssh -i ~/.ssh/staging_key \
-            -o StrictHostKeyChecking=no \
-            $DEPLOY_USER@$DEPLOY_HOST \
-            "cd /opt/todo-ai-demo && \
-             docker compose -f docker-compose.staging.yml pull && \
-             IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d"
-          rm ~/.ssh/staging_key
+          cd /opt/todo-ai-demo
+          docker compose -f docker-compose.staging.yml pull
+          IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d
 
       - name: Health Check
-        env:
-          DEPLOY_USER: ${{ secrets.STAGING_USER }}
-          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
-          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
-          chmod 600 ~/.ssh/staging_key
           for i in 1 2 3 4 5; do
             echo "Health check kísérlet $i/5..."
-            STATUS=$(ssh -i ~/.ssh/staging_key \
-              -o StrictHostKeyChecking=no \
-              $DEPLOY_USER@$DEPLOY_HOST \
-              "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health" 2>/dev/null)
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health 2>/dev/null)
             if [ "$STATUS" = "200" ]; then
               echo "✅ Health check sikeres (HTTP $STATUS)"
-              rm ~/.ssh/staging_key
               exit 0
             fi
             echo "⏳ HTTP $STATUS — várakozás 6 másodpercet..."
             sleep 6
           done
-          rm ~/.ssh/staging_key
           echo "❌ Health check sikertelen 5 kísérlet után"
           exit 1
 
       - name: Smoke Test
         id: smoke
-        env:
-          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
-          DEPLOY_USER: ${{ secrets.STAGING_USER }}
-          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
-          chmod 600 ~/.ssh/staging_key
-          HEALTH=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            $DEPLOY_USER@$DEPLOY_HOST \
-            "curl -s -o /tmp/health_body.txt -w '%{http_code}|%{time_total}' http://localhost:8080/api/health")
+          HEALTH=$(curl -s -o /tmp/health_body.txt -w '%{http_code}|%{time_total}' http://localhost:8080/api/health)
           HEALTH_STATUS=$(echo $HEALTH | cut -d'|' -f1)
           HEALTH_TIME=$(echo $HEALTH | cut -d'|' -f2)
-          HEALTH_BODY=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            $DEPLOY_USER@$DEPLOY_HOST "cat /tmp/health_body.txt")
-          TODOS=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
-            $DEPLOY_USER@$DEPLOY_HOST \
-            "curl -s -o /dev/null -w '%{http_code}|%{time_total}' http://localhost:8080/api/todos")
+          HEALTH_BODY=$(cat /tmp/health_body.txt)
+          TODOS=$(curl -s -o /dev/null -w '%{http_code}|%{time_total}' http://localhost:8080/api/todos)
           TODOS_STATUS=$(echo $TODOS | cut -d'|' -f1)
           TODOS_TIME=$(echo $TODOS | cut -d'|' -f2)
-          rm ~/.ssh/staging_key
           echo "health_status=$HEALTH_STATUS" >> $GITHUB_OUTPUT
           echo "health_time=$HEALTH_TIME" >> $GITHUB_OUTPUT
           echo "health_body=$HEALTH_BODY" >> $GITHUB_OUTPUT
