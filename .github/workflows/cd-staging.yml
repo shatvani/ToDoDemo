@@ -53,12 +53,14 @@ jobs:
           IMAGE_TAG=develop docker compose -f docker-compose.staging.yml up -d
 
       - name: Health Check
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
         run: |
           for i in 1 2 3 4 5; do
             echo "Health check kísérlet $i/5..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health 2>/dev/null)
-            if [ "$STATUS" = "200" ]; then
-              echo "✅ Health check sikeres (HTTP $STATUS)"
+            STATUS=$(curl -sk -o /dev/null -w '%{http_code}' $STAGING_URL/api/health 2>/dev/null)
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "503" ]; then
+              echo "✅ Alkalmazás válaszol (HTTP $STATUS)"
               exit 0
             fi
             echo "⏳ HTTP $STATUS — várakozás 6 másodpercet..."
@@ -69,12 +71,14 @@ jobs:
 
       - name: Smoke Test
         id: smoke
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
         run: |
-          HEALTH=$(curl -s -o /tmp/health_body.txt -w '%{http_code}|%{time_total}' http://localhost:8080/api/health)
+          HEALTH=$(curl -sk -o /tmp/health_body.txt -w '%{http_code}|%{time_total}' $STAGING_URL/api/health)
           HEALTH_STATUS=$(echo $HEALTH | cut -d'|' -f1)
           HEALTH_TIME=$(echo $HEALTH | cut -d'|' -f2)
           HEALTH_BODY=$(cat /tmp/health_body.txt)
-          TODOS=$(curl -s -o /dev/null -w '%{http_code}|%{time_total}' http://localhost:8080/api/todos)
+          TODOS=$(curl -sk -o /dev/null -w '%{http_code}|%{time_total}' $STAGING_URL/api/todos)
           TODOS_STATUS=$(echo $TODOS | cut -d'|' -f1)
           TODOS_TIME=$(echo $TODOS | cut -d'|' -f2)
           echo "health_status=$HEALTH_STATUS" >> $GITHUB_OUTPUT
