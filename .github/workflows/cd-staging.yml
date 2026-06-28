@@ -87,6 +87,15 @@ jobs:
           echo "todos_status=$TODOS_STATUS" >> $GITHUB_OUTPUT
           echo "todos_time=$TODOS_TIME" >> $GITHUB_OUTPUT
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
       - name: AI Smoke Test Summary
         continue-on-error: true
         working-directory: .github/scripts
@@ -94,7 +103,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
           HEALTH_STATUS: ${{ steps.smoke.outputs.health_status }}
           HEALTH_TIME: ${{ steps.smoke.outputs.health_time }}
           HEALTH_BODY: ${{ steps.smoke.outputs.health_body }}
