@@ -23,9 +23,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Copy docker-compose to server
-        run: cp docker-compose.staging.yml /opt/todo-ai-demo/docker-compose.staging.yml
-
       - name: Szemantikus verzió + Git tag
         id: tag
         run: |
@@ -53,7 +50,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/staging_key
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
           ssh -i ~/.ssh/staging_key \
             -o StrictHostKeyChecking=no \
@@ -70,7 +67,7 @@ jobs:
           SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/staging_key
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
           for i in 1 2 3 4 5; do
             echo "Health check kísérlet $i/5..."
@@ -98,7 +95,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/staging_key
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/staging_key
           chmod 600 ~/.ssh/staging_key
           HEALTH=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
             $DEPLOY_USER@$DEPLOY_HOST \
