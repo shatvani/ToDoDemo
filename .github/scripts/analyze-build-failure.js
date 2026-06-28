@@ -1,6 +1,9 @@
 // analyze-build-failure.js — T-76/T-77/T-78
 // GitHub Models API elemzés + OpenProject Bug WP létrehozás
 
+import { callGhModels } from "./gh-models.js";
+import { opHeaders, getTypeId, getPriorityId, findUserId } from "./op-api.js";
+
 const GITHUB_TOKEN     = process.env.GITHUB_TOKEN;
 const OP_BASE_URL      = process.env.OP_BASE_URL;
 const OP_API_TOKEN     = process.env.OP_API_TOKEN;
@@ -30,50 +33,12 @@ Generálj rövid, strukturált hibajelentést:
 
 Válaszolj magyarul, tömören.`;
 
-    const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${GITHUB_TOKEN}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: MODEL,
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.3,
-            max_tokens: 512,
-        }),
+    return callGhModels(GITHUB_TOKEN, {
+        model: MODEL,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        max_tokens: 512,
     });
-
-    if (!response.ok) throw new Error(`GitHub Models API hiba: ${response.status}`);
-    const data = await response.json();
-    return data.choices[0].message.content;
-}
-
-const opHeaders = () => {
-    const credentials = `apikey:${OP_API_TOKEN}`;
-    return {
-        'Authorization': `Basic ${Buffer.from(credentials).toString('base64')}`,
-        'Content-Type': 'application/json',
-    };
-};
-
-async function getTypeId(name) {
-    const res = await fetch(`${OP_BASE_URL}/api/v3/types`, { headers: opHeaders() });
-    const data = await res.json();
-    return data._embedded.elements.find(t => t.name.toLowerCase() === name.toLowerCase())?.id ?? null;
-}
-
-async function getPriorityId(name) {
-    const res = await fetch(`${OP_BASE_URL}/api/v3/priorities`, { headers: opHeaders() });
-    const data = await res.json();
-    return data._embedded.elements.find(p => p.name.toLowerCase() === name.toLowerCase())?.id ?? null;
-}
-
-async function findUserId(email) {
-    const encoded = encodeURIComponent(JSON.stringify([{"login":{"operator":"~","values":[email]}}]));
-    const res = await fetch(`${OP_BASE_URL}/api/v3/users?filters=${encoded}`, { headers: opHeaders() });
-    const data = await res.json();
-    return data._embedded?.elements?.[0]?.id ?? null;
 }
 
 async function createBugWp(analysis) {
@@ -82,9 +47,9 @@ async function createBugWp(analysis) {
     const description = `**AI-generált elemzés:**\n\n${analysis}\n\n---\n**Build log:** ${RUN_URL}\n**Committer:** ${COMMITTER_NAME} (${COMMITTER_EMAIL})\n**Commit:** ${shortSha}`;
 
     const [typeId, priorityId, assigneeId] = await Promise.all([
-        getTypeId('Bug'),
-        getPriorityId('High'),
-        findUserId(COMMITTER_EMAIL),
+        getTypeId(OP_BASE_URL, OP_API_TOKEN, 'Bug'),
+        getPriorityId(OP_BASE_URL, OP_API_TOKEN, 'High'),
+        findUserId(OP_BASE_URL, OP_API_TOKEN, COMMITTER_EMAIL),
     ]);
 
     const body = {
@@ -100,7 +65,7 @@ async function createBugWp(analysis) {
 
     const res = await fetch(`${OP_BASE_URL}/api/v3/projects/${OP_PROJECT_ID}/work_packages`, {
         method: 'POST',
-        headers: opHeaders(),
+        headers: opHeaders(OP_API_TOKEN),
         body: JSON.stringify(body),
     });
 

@@ -5,6 +5,7 @@
 //   TODOS_STATUS, TODOS_TIME
 
 import { Octokit } from "@octokit/rest";
+import { callGhModels } from "./gh-models.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO         = process.env.REPO;
@@ -27,38 +28,24 @@ Végpont tesztek:
 - GET /api/todos  → HTTP ${TODOS_STATUS}, ${TODOS_TIME}s
 `;
 
-    const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${GITHUB_TOKEN}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: MODEL,
-            messages: [
-                {
-                    role: "system",
-                    content: `Te egy DevOps mérnök vagy, aki staging deploy után smoke test eredményeket értékel.
+    return callGhModels(GITHUB_TOKEN, {
+        model: MODEL,
+        messages: [
+            {
+                role: "system",
+                content: `Te egy DevOps mérnök vagy, aki staging deploy után smoke test eredményeket értékel.
 Az alkalmazás: ASP.NET Core 10 Minimal API Todo alkalmazás.
 Értékeld az eredményeket tömören, max 5 mondatban, magyarul.
 Jelezd: sikeres-e a deploy, van-e aggasztó jel.`,
-                },
-                {
-                    role: "user",
-                    content: testResults,
-                },
-            ],
-            temperature: 0.2,
-            max_tokens: 512,
-        }),
+            },
+            {
+                role: "user",
+                content: testResults,
+            },
+        ],
+        temperature: 0.2,
+        max_tokens: 512,
     });
-
-    if (!response.ok) {
-        throw new Error(`GitHub Models API hiba: ${response.status} ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
 }
 
 async function postCommitComment(summary) {
