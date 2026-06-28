@@ -68,4 +68,5 @@ app.MapWolverineEndpoints(opts =>
     opts.UseFluentValidationProblemDetailMiddleware();
 });
 
+await app.MigrateDbAsync();
 await app.RunAsync();
