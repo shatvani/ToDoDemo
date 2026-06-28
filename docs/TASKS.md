@@ -94,8 +94,8 @@ A kettő kiegészíti egymást: `.editorconfig` = szintaktikai formázás, `styl
 
 | Task | OP WP | Leírás | Branch |
 |---|---|---|---|
-| T-15 | OP-15 | `TodoItem` entitás létrehozása (SPEC.md 3.1 alapján, összes mezővel) | `feature/OP-15-todoitem-entity` |
-| T-16 | OP-16 | `Status` és `Priority` enum-ok definiálása | `feature/OP-16-enums` |
+| T-15 | OP-15 | `Status` és `Priority` enum-ok definiálása | `feature/OP-15-enums` |
+| T-16 | OP-16 | `TodoItem` entitás létrehozása (SPEC.md 3.1 alapján, összes mezővel) | `feature/OP-16-todoitem-entity` |
 | T-17 | OP-17 | `TodoDbContext` + EF Core konfiguráció (Fluent API, UTC timestamp konvenciók) | `feature/OP-17-dbcontext` |
 | T-18 | OP-18 | Initial migration létrehozása + `Program.cs`-ben auto-migrate | `feature/OP-18-initial-migration` |
 | T-19 | OP-19 | Connection string konfiguráció (`appsettings.json` + environment variable) | `chore/OP-19-connection-string` |
@@ -212,7 +212,7 @@ A kettő kiegészíti egymást: `.editorconfig` = szintaktikai formázás, `styl
 | Task | OP WP | Leírás | Branch |
 |---|---|---|---|
 | T-35 | OP-35 | Health check endpoint implementálása (`Microsoft.Extensions.Diagnostics.HealthChecks`) | `feature/OP-35-health-check` |
-| T-36 | OP-36 | PostgreSQL health check hozzáadása (DB kapcsolat ellenőrzés) | `feature/OP-36-db-health-check` |
+| T-36 | OP-36 | MSSQL health check hozzáadása (DB kapcsolat ellenőrzés) | `feature/OP-36-db-health-check` |
 
 **Elfogadási kritérium:** `GET /api/health` → `200 OK` `{"status":"Healthy"}`. DB leállás esetén `503 Service Unavailable`.
 
@@ -324,7 +324,7 @@ A kettő kiegészíti egymást: `.editorconfig` = szintaktikai formázás, `styl
 | T-54 | OP-54 | `ci.yml` alap struktúra: trigger, job, checkout, .NET setup | `chore/OP-54-ci-base` |
 | T-55 | OP-55 | `dotnet format --verify-no-changes` lépés + hiba esetén értesítés | `chore/OP-55-ci-dotnet-format` |
 | T-56 | OP-56 | `dotnet build` lépés Roslyn + StyleCop analyzer kimenettel | `chore/OP-56-ci-build` |
-| T-57 | OP-57 | `dotnet test` lépés Testcontainers PostgreSQL-lel + JUnit XML + Coverlet coverage | `chore/OP-57-ci-test` |
+| T-57 | OP-57 | `dotnet test` lépés Testcontainers MSSQL-lel + JUnit XML + Coverlet coverage | `chore/OP-57-ci-test` |
 | T-58 | OP-58 | SonarCloud scan lépés + Quality Gate ellenőrzés | `chore/OP-58-ci-sonarcloud` |
 | T-59 | OP-59 | Copilot Agent: AI code review lépés beállítása (PR komment) | `chore/OP-59-ci-copilot-review` |
 | T-60 | OP-60 | Docker image build + GHCR push lépés (csak `main` branch-en) | `chore/OP-60-ci-docker-push` |

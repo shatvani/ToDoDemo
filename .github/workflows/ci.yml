@@ -1,0 +1,221 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - 'feature/**'
+      - 'chore/**'
+      - 'bugfix/**'
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+jobs:
+  ci:
+    name: CI
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: dotnet format
+        run: dotnet format --verify-no-changes
+
+      - name: SonarCloud scanner PATH
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: SonarCloud begin
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"shatvani_ToDoDemo" \
+            /o:"shatvani" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+            /d:sonar.coverage.exclusions="**/*"
+
+      - name: dotnet build
+        run: dotnet build --no-incremental -warnaserror -p:SkipTailwind=true
+
+      - name: dotnet test
+        run: dotnet test --no-build -p:SkipTailwind=true --collect:"XPlat Code Coverage" --logger "junit;LogFilePath=../../test-results.xml" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: SonarCloud end
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+  ai-code-review:
+    name: AI Code Review
+    runs-on: self-hosted
+    needs: ci
+    if: always() && github.event_name == 'pull_request'
+    continue-on-error: true
+
+    permissions:
+      pull-requests: write
+      models: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
+      - name: AI Code Review (GitHub Models)
+        working-directory: .github/scripts
+        run: node ai-code-review.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+
+  docker:
+    name: Docker Build & Push
+    runs-on: self-hosted
+    needs: ci
+    if: success()
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/todo-ai-demo
+          tags: |
+            type=sha
+            type=ref,event=branch
+
+      - name: Build & Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  op-notify:
+    name: OpenProject Notification
+    needs: ci
+    if: always()
+    uses: ./.github/workflows/op-integration.yml
+    with:
+      event_type: ${{ needs.ci.result == 'success' && 'build_passed' || 'build_failed' }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+    secrets:
+      OP_API_TOKEN: ${{ secrets.OP_API_TOKEN }}
+      OP_BASE_URL: ${{ secrets.OP_BASE_URL }}
+      OP_PROJECT_ID: ${{ secrets.OP_PROJECT_ID }}
+
+  build-failure-analysis:
+    name: Build Failure Analysis
+    needs: ci
+    if: needs.ci.result == 'failure'
+    runs-on: self-hosted
+
+    permissions:
+      models: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get last committer
+        id: committer
+        run: |
+          echo "email=$(git log -1 --pretty=format:'%ae')" >> $GITHUB_OUTPUT
+          echo "name=$(git log -1 --pretty=format:'%an')" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
+      - name: Analyze & Create OP Bug
+        working-directory: .github/scripts
+        run: node analyze-build-failure.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OP_BASE_URL: ${{ secrets.OP_BASE_URL }}
+          OP_API_TOKEN: ${{ secrets.OP_API_TOKEN }}
+          OP_PROJECT_ID: ${{ secrets.OP_PROJECT_ID }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMITTER_EMAIL: ${{ steps.committer.outputs.email }}
+          COMMITTER_NAME: ${{ steps.committer.outputs.name }}
+
+  ai-pr-description:
+    name: AI PR Description
+    runs-on: self-hosted
+    needs: ci
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+
+    permissions:
+      pull-requests: write
+      models: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci --ignore-scripts
+
+      - name: AI PR Description (GitHub Models)
+        working-directory: .github/scripts
+        run: node ai-pr-description.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}

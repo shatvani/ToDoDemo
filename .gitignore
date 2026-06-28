@@ -106,7 +106,8 @@ coverage-report/
 
 # Entity Framework Core Migrations (compiled)
 # Keep .cs migration files, ignore compiled artifacts
-**/Migrations/*Designer.cs
+# **/Migrations/*Designer.cs
+!**/Migrations/*.Designer.cs
 
 # Secrets — NEVER commit
 appsettings.Production.json
@@ -130,9 +131,7 @@ desktop.ini
 # GitHub Actions local runner
 _work/
 
-<<<<<<< Updated upstream
-# Workflow description files
-workflow-*"docker/README.txt" 
-=======
-workflow*
->>>>>>> Stashed changes
+tools/tailwindcss.exe
+src/TodoApi/wwwroot/css/site.css
+
+.github/scripts/node_modules/

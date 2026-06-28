@@ -1,0 +1,2 @@
+# A core.autocrlf = true miatt git Windows-on automatikusan CRLF-re konvertálja a fájlokat checkout-kor, és LF-re commit-kor — ezért nem látja változásnak az end_of_line = lf módosítást, és ezért kapja a runner CRLF-et a fájlokban.
+* text=auto eol=lf

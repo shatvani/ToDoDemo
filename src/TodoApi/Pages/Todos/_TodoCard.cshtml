@@ -1,0 +1,134 @@
+@model TodoApi.DTOs.TodoItemDto
+
+@{
+    string StatusBadgeCss(string status) => status switch
+    {
+        "InProgress" => "bg-blue-100 text-blue-700",
+        "Done"       => "bg-green-100 text-green-700",
+        "Cancelled"  => "bg-red-100 text-red-700",
+        _            => "bg-gray-100 text-gray-600",
+    };
+
+    string StatusLabel(string status) => status switch
+    {
+        "InProgress" => "Folyamatban",
+        "Done"       => "Kész",
+        "Cancelled"  => "Törölve",
+        _            => "Nyitott",
+    };
+
+    string PriorityBadgeCss(string priority) => priority switch
+    {
+        "High"   => "bg-orange-100 text-orange-700",
+        "Urgent" => "bg-red-100 text-red-700",
+        "Medium" => "bg-yellow-100 text-yellow-700",
+        _        => "bg-gray-100 text-gray-500",
+    };
+
+    string PriorityLabel(string priority) => priority switch
+    {
+        "High"   => "Magas",
+        "Urgent" => "Kritikus",
+        "Medium" => "Közepes",
+        _        => "Alacsony",
+    };
+}
+
+<div id="card-@Model.Id" class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3">
+
+    <div class="flex items-start justify-between gap-2">
+        <h2 class="font-semibold text-gray-900 text-base leading-snug">@Model.Title</h2>
+        <span class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full @StatusBadgeCss(Model.Status)">
+            @StatusLabel(Model.Status)
+        </span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <p class="text-sm text-gray-500 line-clamp-2">@Model.Description</p>
+    }
+
+    <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full @PriorityBadgeCss(Model.Priority)">
+            @PriorityLabel(Model.Priority)
+        </span>
+
+        @if (Model.DueDate.HasValue)
+        {
+            <span class="text-xs text-gray-400 flex items-center gap-1">
+                <span>📅</span>
+                <span>@Model.DueDate.Value.ToLocalTime().ToString("yyyy. MM. dd.")</span>
+            </span>
+        }
+    </div>
+
+    @if (Model.Tags is { Length: > 0 })
+    {
+        <div class="flex flex-wrap gap-1">
+            @foreach (var tag in Model.Tags)
+            {
+                <span class="text-xs bg-gray-50 border border-gray-200 text-gray-500 px-2 py-0.5 rounded-full">@tag</span>
+            }
+        </div>
+    }
+
+    <div class="flex gap-2 pt-1 flex-wrap">
+        <button hx-get="/todos/edit/@Model.Id"
+                hx-target="#card-@Model.Id"
+                hx-swap="outerHTML"
+                class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 transition">
+            ✏️ Szerkesztés
+        </button>
+        <button hx-delete="/todos/delete/@Model.Id"
+            hx-target="#card-@Model.Id"
+            hx-swap="outerHTML"
+            hx-confirm="Biztosan törölni szeretnéd ezt a feladatot?"
+            class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100 transition">
+            🗑️ Törlés
+        </button>
+        <div>
+        @if (Model.Status == "Open")
+        {
+            <button hx-post="/todos/status/@Model.Id"
+                    hx-vals='{"newStatus": "InProgress"}'
+                    hx-target="#card-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                ▶ Folyamatban
+            </button>
+            <button hx-post="/todos/status/@Model.Id"
+                    hx-vals='{"newStatus": "Cancelled"}'
+                    hx-target="#card-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                ✕ Visszavonás
+            </button>
+        }
+        else if (Model.Status == "InProgress")
+        {
+            <button hx-post="/todos/status/@Model.Id"
+                    hx-vals='{"newStatus": "Done"}'
+                    hx-target="#card-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition">
+                ✓ Kész
+            </button>
+            <button hx-post="/todos/status/@Model.Id"
+                    hx-vals='{"newStatus": "Open"}'
+                    hx-target="#card-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                ↩ Visszanyit
+            </button>
+            <button hx-post="/todos/status/@Model.Id"
+                    hx-vals='{"newStatus": "Cancelled"}'
+                    hx-target="#card-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="rounded-full px-3 py-1.5 text-xs font-medium bg-red-100 text-red-600 hover:bg-red-200 transition">
+                ✕ Visszavonás
+            </button>
+        }
+        </div>
+    </div>
+
+</div>

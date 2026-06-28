@@ -31,13 +31,15 @@ Ez a projekt egy **Todo alkalmazás**, amely elsősorban nem a funkcionalitásá
 | Szerver | Szerepkör | IP |
 |---|---|---|
 | LINVDOCK1 | Production (OpenProject fut itt) | 172.22.0.131 |
-| LINVDOCK1T | Test / Staging + GitHub Actions self-hosted runner | — |
+| LINVDOCK1T | Test / Staging | — |
+| LINVDOCK-BUILD | GitHub Actions self-hosted runner (dedikált build szerver) | — |
 
 ### GitHub Actions runner
 
-- **Típus:** Self-hosted runner, LINVDOCK1T-n Docker-ben futtatva
+- **Típus:** Self-hosted runner, LINVDOCK-BUILD-on Docker-ben futtatva (dedikált build szerver)
 - **Runner label:** `self-hosted`, `linux`, `docker`
 - A runner Docker-in-Docker (DinD) képességgel rendelkezik, hogy a pipeline Docker image-eket tudjon buildelni
+- LINVDOCK1T (staging) nem terhelt build feladatokkal — csak a deploy célpontja
 
 ### Container registry
 
@@ -98,8 +100,9 @@ GET    /api/health             → health check (CI/CD-hez)
 |---|---|
 | Framework | ASP.NET Core 10 Minimal API |
 | ORM | Entity Framework Core 10 |
-| Adatbázis | PostgreSQL 16 |
+| Adatbázis | Microsoft SQL Server 2022 |
 | Architektúra | Vertical Slice Architecture (VSA) |
+| Messaging / CQRS | Wolverine |
 | Validáció | FluentValidation |
 | Tesztelés | xUnit + Testcontainers (PostgreSQL) — Copilot generálja a vázat IDE-ben, fejlesztő írja az edge case-eket |
 | Logging | Microsoft.Extensions.Logging + Application Insights sink |
@@ -118,7 +121,7 @@ GET    /api/health             → health check (CI/CD-hez)
 |---|---|
 | Containerizáció | Docker + Docker Compose |
 | CI/CD | GitHub Actions |
-| Runner | Self-hosted (LINVDOCK1T) |
+| Runner | Self-hosted (LINVDOCK-BUILD) |
 | Registry | GHCR |
 | Reverse proxy | Nginx (staging-en) |
 | Kódminőség (cloud) | SonarCloud (ingyenes, publikus repo) |
@@ -220,19 +223,19 @@ Lépések:
     → Roslyn/dotnet format NEM helyettesíti: azok szintaxis szintűek,
        SonarCloud szemantikus szintű elemzést végez (logikai hibák, komplexitás)
     → Quality Gate: ha nem teljesül, a pipeline elbukik
-8.  Copilot Agent: AI code review
+8.  Claude API: AI code review
     → Automatikusan kommentál a PR-on (kód problémák, javaslatok)
     → Nem blokkolja a pipeline-t, csak kommentál
 9.  Docker image build (api)
 10. Docker image push → GHCR (csak main branch-en)
-11. Copilot Agent: AI PR description generálás
-    → Ha a Quality Gate átment, Copilot agent generálja a PR leírást
+11. Claude API: AI PR description generálás
+    → Ha a Quality Gate átment, Claude API generálja a PR leírást
 12. → OpenProject: build eredmény jelentés (siker vagy kudarc)
 ```
 
-**Failed build esetén (AI integráció — Copilot / GitHub Models API):**
+**Failed build esetén (AI integráció — Claude API):**
 ```
-Build log → GitHub Models API (Copilot) elemzés
+Build log → Claude API elemzés
          → OpenProject: új Work Package létrehozás
            Típus: Bug
            Cím: "[CI FAIL] {branch} — {hiba összefoglalója}"
@@ -255,13 +258,13 @@ Lépések:
 4. docker compose pull (friss image-ek)
 5. docker compose up -d
 6. Health check: GET /api/health (max 30s, retry 5x)
-7. AI smoke test (Copilot Agent)
+7. AI smoke test (Claude API)
    → Kritikus végpontok automatikus tesztelése (GET /api/todos, POST /api/todos, stb.)
-   → Agent összefoglalót generál: mely végpontok válaszoltak, státuszkódok, válaszidők
+   → Claude API összefoglalót generál: mely végpontok válaszoltak, státuszkódok, válaszidők
    → Eredmény kommentként kerül a merge commithoz
 8. → OpenProject: deploy eredmény
    - Sikeres: érintett Work Package-ek → "In Progress → Deployed"
-   - Sikertelen: új Bug Work Package (Copilot / GitHub Models API elemzéssel)
+   - Sikertelen: új Bug Work Package (Claude API elemzéssel)
 ```
 
 ### 6.3 OpenProject integráció workflow (`op-integration.yml`)
@@ -394,42 +397,42 @@ PO értesítés (OP notification)
 
 ---
 
-## 8. Copilot / GitHub Models API integráció a pipeline-ban
+## 8. Claude API integráció a pipeline-ban
 
-A pipeline-ban minden automatizált AI hívás a **GitHub Models API**-n keresztül történik, amely a Copilot előfizetés részeként elérhető — külön API kulcs és extra költség nélkül.
+A pipeline-ban minden automatizált AI hívás a **Claude API**-n keresztül történik (Anthropic előfizetés). Az `ANTHROPIC_API_KEY` GitHub Actions Secret-ként tárolva.
 
 ### 8.1 Log elemzés (failed build esetén)
 
 ```javascript
 // .github/scripts/analyze-build-failure.js
-const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+const response = await fetch("https://api.anthropic.com/v1/messages", {
   method: "POST",
   headers: {
-    "Authorization": `Bearer ${process.env.GITHUB_TOKEN}`,
+    "x-api-key": process.env.ANTHROPIC_API_KEY,
+    "anthropic-version": "2023-06-01",
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    model: "gpt-4o",   // GitHub Models-on elérhető modell
+    model: "claude-haiku-4-5-20251001",   // gyors és olcsó pipeline feladatokhoz
+    max_tokens: 512,
     messages: [
       {
-        role: "system",
-        content: "CI/CD build failure analyzer vagy. Elemezd a build logot és adj: 1) Root cause 1-2 mondatban, 2) Érintett fájl/osztály, 3) Javasolt javítás. Válaszolj magyarul. Legyél tömör."
-      },
-      {
         role: "user",
-        content: `Build log:\n\n${process.env.BUILD_LOG_EXCERPT}`
+        content: `CI/CD build failure analyzer vagy. Elemezd a build logot és adj: 1) Root cause 1-2 mondatban, 2) Érintett fájl/osztály, 3) Javasolt javítás. Válaszolj magyarul. Legyél tömör.\n\nBuild log:\n\n${process.env.BUILD_LOG_EXCERPT}`
       }
     ]
   })
 });
 ```
 
+> ℹ️ Pipeline feladatokhoz (log elemzés, rövid összefoglalók) `claude-haiku-4-5-20251001` modell javasolt — gyors és költséghatékony. Komplexebb feladatokhoz (PO task lebontás) `claude-sonnet-4-6` használható.
+
 ### 8.2 PO feladatkiosztási asszisztens
 
 ```javascript
 // Természetes nyelvű igény → strukturált WP javaslat
 {
-  role: "system",
+  role: "user",
   content: `Projektmenedzsment asszisztens vagy.
 Fejlesztési igényből hozz létre strukturált OpenProject Work Package javaslatokat.
 Válaszolj KIZÁRÓLAG JSON-ban:

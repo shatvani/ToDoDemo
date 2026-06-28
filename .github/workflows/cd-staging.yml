@@ -1,0 +1,148 @@
+name: CD Staging
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: self-hosted
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Copy docker-compose to server
+        run: cp docker-compose.staging.yml /opt/todo-ai-demo/docker-compose.staging.yml
+
+      - name: Szemantikus verzió + Git tag
+        id: tag
+        run: |
+          git fetch --tags
+          LAST_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n1)
+          if [ -z "$LAST_TAG" ]; then
+            NEW_TAG="v1.0.0"
+          else
+            VERSION=${LAST_TAG#v}
+            PATCH=$(echo $VERSION | cut -d. -f3)
+            NEW_PATCH=$((PATCH + 1))
+            NEW_TAG="v$(echo $VERSION | cut -d. -f1).$(echo $VERSION | cut -d. -f2).$NEW_PATCH"
+          fi
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
+
+      - name: Copy docker-compose to server
+        run: cp docker-compose.staging.yml /opt/todo-ai-demo/docker-compose.staging.yml
+
+      - name: SSH Deploy
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          ssh -i ~/.ssh/staging_key \
+            -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST \
+            "cd /opt/todo-ai-demo && \
+             docker compose -f docker-compose.staging.yml pull && \
+             IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d"
+          rm ~/.ssh/staging_key
+
+      - name: Health Check
+        env:
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          for i in 1 2 3 4 5; do
+            echo "Health check kísérlet $i/5..."
+            STATUS=$(ssh -i ~/.ssh/staging_key \
+              -o StrictHostKeyChecking=no \
+              $DEPLOY_USER@$DEPLOY_HOST \
+              "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health" 2>/dev/null)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check sikeres (HTTP $STATUS)"
+              rm ~/.ssh/staging_key
+              exit 0
+            fi
+            echo "⏳ HTTP $STATUS — várakozás 6 másodpercet..."
+            sleep 6
+          done
+          rm ~/.ssh/staging_key
+          echo "❌ Health check sikertelen 5 kísérlet után"
+          exit 1
+
+      - name: Smoke Test
+        id: smoke
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/staging_key
+          chmod 600 ~/.ssh/staging_key
+          HEALTH=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST \
+            "curl -s -o /tmp/health_body.txt -w '%{http_code}|%{time_total}' http://localhost:8080/api/health")
+          HEALTH_STATUS=$(echo $HEALTH | cut -d'|' -f1)
+          HEALTH_TIME=$(echo $HEALTH | cut -d'|' -f2)
+          HEALTH_BODY=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST "cat /tmp/health_body.txt")
+          TODOS=$(ssh -i ~/.ssh/staging_key -o StrictHostKeyChecking=no \
+            $DEPLOY_USER@$DEPLOY_HOST \
+            "curl -s -o /dev/null -w '%{http_code}|%{time_total}' http://localhost:8080/api/todos")
+          TODOS_STATUS=$(echo $TODOS | cut -d'|' -f1)
+          TODOS_TIME=$(echo $TODOS | cut -d'|' -f2)
+          rm ~/.ssh/staging_key
+          echo "health_status=$HEALTH_STATUS" >> $GITHUB_OUTPUT
+          echo "health_time=$HEALTH_TIME" >> $GITHUB_OUTPUT
+          echo "health_body=$HEALTH_BODY" >> $GITHUB_OUTPUT
+          echo "todos_status=$TODOS_STATUS" >> $GITHUB_OUTPUT
+          echo "todos_time=$TODOS_TIME" >> $GITHUB_OUTPUT
+
+      - name: AI Smoke Test Summary
+        continue-on-error: true
+        working-directory: .github/scripts
+        run: node ai-smoke-test.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEALTH_STATUS: ${{ steps.smoke.outputs.health_status }}
+          HEALTH_TIME: ${{ steps.smoke.outputs.health_time }}
+          HEALTH_BODY: ${{ steps.smoke.outputs.health_body }}
+          TODOS_STATUS: ${{ steps.smoke.outputs.todos_status }}
+          TODOS_TIME: ${{ steps.smoke.outputs.todos_time }}
+
+  op-notify:
+    name: OpenProject Notification
+    needs: deploy
+    if: always()
+    uses: ./.github/workflows/op-integration.yml
+    with:
+      event_type: ${{ needs.deploy.result == 'success' && 'deployed' || 'deploy_failed' }}
+      branch: ${{ github.event.workflow_run.head_branch }}
+      commit_sha: ${{ github.event.workflow_run.head_sha }}
+    secrets:
+      OP_API_TOKEN: ${{ secrets.OP_API_TOKEN }}
+      OP_BASE_URL: ${{ secrets.OP_BASE_URL }}
+      OP_PROJECT_ID: ${{ secrets.OP_PROJECT_ID }}

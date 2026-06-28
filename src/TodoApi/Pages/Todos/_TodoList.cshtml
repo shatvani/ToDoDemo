@@ -1,0 +1,22 @@
+@model IEnumerable<TodoApi.DTOs.TodoItemDto>
+
+@{
+    var todos = Model.ToList();
+}
+
+@if (!todos.Any())
+{
+    <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+        <span class="text-5xl mb-4">📭</span>
+        <p class="text-lg font-medium">Nincs találat</p>
+    </div>
+}
+else
+{
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach (var todo in todos)
+        {
+            @await Html.PartialAsync("_TodoCard", todo)
+        }
+    </div>
+}

@@ -2,7 +2,8 @@ root = true
 
 [*]
 charset = utf-8
-end_of_line = crlf
+# A self-hosted runner Linux — a git checkout LF-et ad. A crlf beállítás Windows-centrikus; cross-platform projekteknél az lf a helyes választás. Windows IDE-k (VS, Rider) ma már mindkettőt kezelik.
+end_of_line = lf
 indent_style = space
 trim_trailing_whitespace = true
 insert_final_newline = true
@@ -91,3 +92,12 @@ trim_trailing_whitespace = false
 
 [Makefile]
 indent_style = tab
+
+# Az EF Core által generált migrációs fájlokat generált kódként kezeljük,
+# így a StyleCop és a többi analyzer nem fut rájuk.
+# [**/Migrations/*.cs]
+# generated_code = true
+
+# Az ASP.NET Core által generált Razor Page modellekben a StyleCop SA1649 szabálya (file name must match type name) nem releváns, ezért kikapcsoljuk.
+[*.cshtml.cs]
+dotnet_diagnostic.SA1649.severity = none

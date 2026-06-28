@@ -1,0 +1,100 @@
+@{
+    var fieldErrors = ViewData["Errors"] as Dictionary<string, string[]>;
+}
+
+<form hx-post="/todos/create"
+      hx-target="#create-panel"
+      hx-swap="innerHTML"
+      hx-on::after-request="if(event.detail.successful) this.reset()"
+      class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-5">
+
+    <h2 class="text-lg font-semibold text-gray-900">Új feladat</h2>
+
+    <div class="flex flex-col gap-1">
+        <label for="title" class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Cím <span class="text-red-500">*</span>
+        </label>
+        <input id="title" name="title" type="text" required
+               placeholder="Feladat neve..."
+               class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        @if (fieldErrors?.TryGetValue("Title", out var titleErrors) == true)
+        {
+            foreach (var error in titleErrors!)
+            {
+                <p class="text-red-500 text-xs mt-1">@error</p>
+            }
+        }
+    </div>
+
+    <div class="flex flex-col gap-1">
+        <label for="description" class="text-xs font-medium text-gray-500 uppercase tracking-wide">Leírás</label>
+        <textarea id="description" name="description" rows="3"
+                  placeholder="Opcionális leírás..."
+                  class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"></textarea>
+        @if (fieldErrors?.TryGetValue("Description", out var descriptionErrors) == true)
+        {
+            foreach (var error in descriptionErrors!)
+            {
+                <p class="text-red-500 text-xs mt-1">@error</p>
+            }
+        }
+    </div>
+
+    <div class="flex flex-wrap gap-4">
+
+        <div class="flex flex-col gap-1 flex-1 min-w-32">
+            <label for="priority" class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Prioritás <span class="text-red-500">*</span>
+            </label>
+            <select id="priority" name="priority" required
+                    class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="Low">Alacsony</option>
+                <option value="Medium" selected>Közepes</option>
+                <option value="High">Magas</option>
+                <option value="Urgent">Kritikus</option>
+            </select>
+            @if (fieldErrors?.TryGetValue("Priority", out var priorityErrors) == true)
+            {
+                foreach (var error in priorityErrors!)
+                {
+                    <p class="text-red-500 text-xs mt-1">@error</p>
+                }
+            }
+        </div>
+
+        <div class="flex flex-col gap-1 flex-1 min-w-36">
+            <label for="dueDate" class="text-xs font-medium text-gray-500 uppercase tracking-wide">Határidő</label>
+            <input id="dueDate" name="dueDate" type="date"
+                   class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            @if (fieldErrors?.TryGetValue("DueDate", out var dueDateErrors) == true)
+            {
+                foreach (var error in dueDateErrors!)
+                {
+                    <p class="text-red-500 text-xs mt-1">@error</p>
+                }
+            }
+        </div>
+
+    </div>
+
+    <div class="flex flex-col gap-1">
+        <label for="tags-raw" class="text-xs font-medium text-gray-500 uppercase tracking-wide">Címkék</label>
+        <input id="tags-raw" name="tags-raw" type="text"
+               placeholder="pl. urgent, fontos"
+               class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+
+    <div class="flex gap-3 pt-1">
+        <button type="submit"
+                class="rounded-lg px-5 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                style="background-color: #12326e;">
+            Létrehozás
+        </button>
+        <button type="button"
+                onclick="document.getElementById('create-panel').innerHTML = ''"
+                class="rounded-lg border border-gray-200 px-5 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 transition">
+            Mégse
+        </button>
+    </div>
+
+</form>
