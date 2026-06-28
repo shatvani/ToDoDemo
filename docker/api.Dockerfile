@@ -4,6 +4,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Tailwind CLI Linux bináris letöltése
+RUN curl -fsSL https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
+    -o /usr/local/bin/tailwindcss && chmod +x /usr/local/bin/tailwindcss
+
+
 # Restore — külön lépésben, hogy a Docker cache-t kihasználjuk
 COPY ["src/TodoApi/TodoApi.csproj", "src/TodoApi/"]
 RUN dotnet restore "src/TodoApi/TodoApi.csproj"
@@ -11,6 +16,8 @@ RUN dotnet restore "src/TodoApi/TodoApi.csproj"
 # Build
 COPY . .
 WORKDIR "/src/src/TodoApi"
+# CSS generálás (Linux CLI-vel, MSBuild target megkerülve)
+RUN tailwindcss -i Styles/input.css -o wwwroot/css/site.css --minify
 RUN dotnet build "TodoApi.csproj" -c Release -o /app/build -p:SkipTailwind=true
 
 # ── Stage 2: Publish ──────────────────────────────────────────────────────────
