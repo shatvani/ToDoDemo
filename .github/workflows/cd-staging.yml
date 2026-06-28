@@ -50,7 +50,7 @@ jobs:
         run: |
           cd /opt/todo-ai-demo
           docker compose -f docker-compose.staging.yml pull
-          IMAGE_TAG=main docker compose -f docker-compose.staging.yml up -d
+          IMAGE_TAG=develop docker compose -f docker-compose.staging.yml up -d
 
       - name: Health Check
         run: |

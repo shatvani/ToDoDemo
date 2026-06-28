@@ -23,7 +23,7 @@ services:
       - "5432"
 
   api:
-    image: ghcr.io/shatvani/todo-ai-demo:${IMAGE_TAG:-main}
+    image: ghcr.io/shatvani/todo-ai-demo:${IMAGE_TAG:-develop}
     container_name: todo-api-staging
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
