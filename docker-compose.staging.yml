@@ -5,22 +5,21 @@ networks:
 services:
 
   db:
-    image: postgres:16-alpine
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: todo-db-staging
     environment:
-      POSTGRES_DB: tododb
-      POSTGRES_USER: todo
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - todo-db-staging-data:/var/lib/postgresql/data
+      - todo-db-staging-data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U todo -d tododb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    # Staging-ben az adatbázis nincs kívülre nyitva
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' -C -b -o /dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     expose:
-      - "5432"
+      - "1433"
 
   api:
     image: ghcr.io/shatvani/todo-ai-demo:${IMAGE_TAG:-develop}
