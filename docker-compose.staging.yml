@@ -26,7 +26,7 @@ services:
     container_name: todo-api-staging
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
-      ConnectionStrings__DefaultConnection: "Server=db;Database=tododb;User Id=todo;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=tododb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
       TodoApi__BaseUrl: "http://localhost:8080"
     expose:
       - "8080"
