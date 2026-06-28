@@ -5,12 +5,13 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy to Staging
     runs-on: self-hosted
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     permissions:
       contents: write
@@ -21,6 +22,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Copy docker-compose to server
+        run: cp docker-compose.staging.yml /opt/todo-ai-demo/docker-compose.staging.yml
 
       - name: Szemantikus verzió + Git tag
         id: tag
@@ -38,6 +42,9 @@ jobs:
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
           git tag $NEW_TAG
           git push origin $NEW_TAG
+
+      - name: Copy docker-compose to server
+        run: cp docker-compose.staging.yml /opt/todo-ai-demo/docker-compose.staging.yml
 
       - name: SSH Deploy
         env:
